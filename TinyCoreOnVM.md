@@ -32,7 +32,7 @@ ethernet0.virtualDev = "vmxnet3"
   
   - Play Virtual Machine
  
-### first boot
+### First boot
 
 Core has autologin for user tc, where tc is a sudoer
 
@@ -47,7 +47,7 @@ Core has autologin for user tc, where tc is a sudoer
   tc@box:~$ sudo reboot
 ```
 
-### second boot
+### Second boot having sda1 as userdata disk
  
 ```
 - on prompt boot: corepure64 tce=sda1 <enter>

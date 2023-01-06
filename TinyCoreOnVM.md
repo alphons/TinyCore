@@ -73,10 +73,10 @@ Core has autologin for user tc, where tc is a sudoer
 
   tc@box:~$ filetool.sh -b
 
-  tc$box:~$ ifconfig (to get the IP address)
+  tc$box:~$ ifconfig (to get the IP address, for example 192.168.1.2)
 ```
 
-Example use ssh from a windows DOS prompt> ssh 192.168.x.y -l tc
+Example use ssh from a windows DOS prompt> ssh 192.168.1.2 -l tc
 
 UserData can be found at /mnt/sda1
 

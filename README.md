@@ -1,5 +1,6 @@
 # TinyCore
 My personal and public information for the TinyCore OS
 
-TinyCoreOnVM.md
+[TinyCore on VM](TinyCoreOnVM.md)
+
 

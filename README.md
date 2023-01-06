@@ -34,18 +34,25 @@ scsi0.virtualDev = "pvscsi"
 ethernet0.virtualDev = "vmxnet3"
   
   - Play Virtual Machine
-  - on prompt boot: <enter>
  
-### booting
+### first boot
 
 Core has autologin for user tc, where tc is a sudoer
 
 ```
+  - on prompt boot: <enter>
+
   tc@box:~$ sudo fdisk /dev/sda
+
 - type: n <enter> p <enter> 1 <enter> <enter> <enter> w <enter>
+
   tc@box:~$ sudo mkfs.ext4 /dev/sda1
   tc@box:~$ sudo reboot
+```
+
+### second boot
  
+```
 - on prompt boot: corepure64 tce=sda1 <enter>
 
 - Lets install some extensions

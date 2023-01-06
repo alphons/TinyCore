@@ -1,4 +1,4 @@
-## As an example building a (64bit) VM for Tinycore
+## Building a (64bit) VM for running Tinycore
 
 Download (latest) CorePure64 iso from www.tinycorelinux.net
 

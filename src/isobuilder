@@ -5,7 +5,7 @@
 # alphons@heijden.com
 #
 #
-ISOBUILDER="2023-01-14 v1.5"
+ISOBUILDER="2023-01-14 v1.6"
 #
 # WORKINGDIR must have write rights for executing user (not root)
 #
@@ -29,7 +29,8 @@ LINUX="$WORKINGDIR/linux-$KERNELVERSION"
 VERSION="$KERNELVERSION$LOCALVERSION"
 #
 # GLIB is experimental at the moment
-GLIB="$WORKINDIR/src/glibc-build/lib"
+GLIBVERSION="glibc-2.36"
+GLIB="$WORKINGDIR/glibc-build"
 #
 KERNEL=vmlinuz64
 INITRD=$ISODIR/initrd
@@ -230,6 +231,27 @@ function LoadPackages()
   echo "Done"
 }
 
+function ShowGLibCompat()
+{
+  strings /lib/libc.so.6 | grep GLIBC
+}
+
+function MakeNewGLib()
+{
+  tce-load -wi python3.9 texinfo
+  cd $WORKINGDIR
+  wget "https://ftp.gnu.org/gnu/glibc/$GLIBVERSION.tar.gz"
+  echo "extracting sources ..."
+  tar xzf "$GLIBVERSION.tar.gz"
+  rm "$GLIBVERSION.tar.gz"
+  mkdir glibc-build
+  cd glibc-build
+  echo "Configure ..."
+  ../$GLIBVERSION/configure --prefix=/ libc_cv_slibdir=/lib
+  make -j`nproc`
+}
+
+
 function InstallGLib()
 {
   clear
@@ -323,7 +345,11 @@ do
   echo "v - Show Variables"
   echo "c - cleanup .ko files from current build"
   echo "w - install all packages for the build system"
-  echo "g - install new GLib"
+  echo
+  echo "s - show current GLib compatibilty"
+  echo "l - make new GLib"
+  echo "g - install new GLib (experimental)"
+  echo
   echo "q - Quit"
   echo
   read -p "0,r,k,m,i,n,p,x,v,c,w,g or q(uit) :" c
@@ -340,6 +366,8 @@ do
     v) ShowVars ;;
     c) CleanKo ;;
     w) LoadPackages ;;
+    s) ShowGLibCompat ;;
+    l) MakeNewGLib ;;
     g) InstallGLib ;;
     q) exit ;;
     *) Unknown ;;

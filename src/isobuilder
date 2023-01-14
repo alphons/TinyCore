@@ -5,9 +5,10 @@
 # alphons@heijden.com
 #
 #
-ISOBUILDER="2023-01-11 v1.4"
+ISOBUILDER="2023-01-14 v1.5"
 #
 # WORKINGDIR must have write rights for executing user (not root)
+#
 WORKINGDIR="/mnt/sda1"
 RELEASE="release"
 ISOSRC=CorePure64-13.1.iso

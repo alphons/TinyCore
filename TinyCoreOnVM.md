@@ -2,15 +2,15 @@
 
 Download (latest) CorePure64 iso from www.tinycorelinux.net
 
-http://tinycorelinux.net/13.x/x86_64/release/CorePure64-13.1.iso]http://tinycorelinux.net/13.x/x86_64/release/CorePure64-13.1.iso
+http://tinycorelinux.net/13.x/x86_64/release/CorePure64-13.1.iso
 
 Download (latest) VMWare player from www.vmware.com
 
-https://www.vmware.com/products/workstation-player/workstation-player-evaluation.html]https://www.vmware.com/products/workstation-player/workstation-player-evaluation.html
+https://www.vmware.com/products/workstation-player/workstation-player-evaluation.html
 
 My download link on 2023-01-06 was:
 
-https://download3.vmware.com/software/WKST-PLAYER-1700/VMware-player-full-17.0.0-20800274.exe]https://download3.vmware.com/software/WKST-PLAYER-1700/VMware-player-full-17.0.0-20800274.exe
+https://download3.vmware.com/software/WKST-PLAYER-1700/VMware-player-full-17.0.0-20800274.exe
 
 - Install VMWare player
 - Start VMWare player

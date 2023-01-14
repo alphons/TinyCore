@@ -1,0 +1,346 @@
+#!/bin/sh
+#
+# IsoBuilder for TinyCore64
+#
+# alphons@heijden.com
+#
+#
+ISOBUILDER="2023-01-11 v1.4"
+#
+# WORKINGDIR must have write rights for executing user (not root)
+WORKINGDIR="/mnt/sda1"
+RELEASE="release"
+ISOSRC=CorePure64-13.1.iso
+#
+# new kernel version goes here
+KERNELVERSION="6.1.6"
+#
+# ---------------------------------------------------------
+#
+LOCALVERSION="-tinycore64"
+#
+REMOTE="http://www.tinycorelinux.net/13.x/x86_64/release/"
+ISODIR="$WORKINGDIR/$RELEASE"
+#
+LINSRC="https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-$KERNELVERSION.tar.xz"
+LINUX="$WORKINGDIR/linux-$KERNELVERSION"
+#
+VERSION="$KERNELVERSION$LOCALVERSION"
+#
+# GLIB is experimental at the moment
+GLIB="$WORKINDIR/src/glibc-build/lib"
+#
+KERNEL=vmlinuz64
+INITRD=$ISODIR/initrd
+BOOT=$ISODIR/iso_contents/boot
+NEWISO="new-${ISOSRC}"
+#
+#
+if [ ! -x /usr/local/bin/mkisofs ]; then
+  tce-load -wi mkisofs-tools
+fi
+if [ ! -x /usr/local/bin/rsync ]; then
+  tc tce-load -wi rsync
+fi
+#
+#
+function IsoExtract () 
+{
+  clear
+  echo "Unpacking ISO to iso_contents and initrd"  
+  cd $ISODIR
+  if [ -d "iso_contents" ] && [ -d "initrd" ]; then
+    echo "Removing old iso_contents and initrd"
+    sudo rm -rf iso_contents
+    sudo rm -rf initrd
+  fi 
+
+  echo "making iso_contents"
+  sudo mkdir iso_contents_org
+  sudo mkdir iso_contents
+  sudo mount -o loop $ISOSRC iso_contents_org
+  sudo rsync -a -H iso_contents_org/ iso_contents/
+  sudo umount iso_contents_org
+  sudo rm -rf iso_contents_org
+  echo "making initrd"
+  sudo mkdir initrd
+  cd initrd
+  sudo gunzip -c ../iso_contents/boot/corepure64.gz | sudo cpio -id -H newc
+  sudo rm ../iso_contents/boot/corepure64.gz
+  echo "Done"
+}
+
+function Install () 
+{
+  clear
+  cd $LINUX
+  echo "Install kernel and modules"
+
+  LIB=$INITRD/lib/modules/$VERSION
+
+  if [ -d "$INITRD" ]; then
+
+    echo "1 Remove LIB directory"
+    sudo rm -rf $LIB
+
+    echo "2 Creating LIB directory"  
+    sudo mkdir -p $LIB
+
+    echo "3 Installing modules in $LIB (takes a while)"
+    sudo make INSTALL_MOD_PATH=$INITRD modules_install >/dev/null
+  
+    echo "4 Compressing modules in LIB directory"
+    sudo find $LIB -name '*.ko' -exec gzip -9 {} \;
+
+    sudo rm -rf $LIB/build
+    sudo rm -rf $LIB/source
+  
+    echo "5 Depmodding the new gzipped modules"
+    sudo depmod -b $INITRD $VERSION
+  
+    echo "6 Linking tinycore usr/local/lib new version kernel.tclocal"
+    sudo ln -s /usr/local/lib/modules/$VERSION/ $LIB/kernel.tclocal
+
+    TOTAL=`find $LIB -name '*.ko.gz' | wc -l`
+    echo "7 Modules (total $TOTAL) are ready in $LIB"
+
+    echo "8 removing old kernel"  
+    sudo rm $BOOT/$KERNEL
+
+    echo "9 copying new kernel as $KERNEL and make it readonly"
+    sudo cp ./arch/x86/boot/bzImage $BOOT/$KERNEL
+  
+    sudo chmod 444 $BOOT/$KERNEL
+    echo
+    echo "New kernel and modules are ready to pack in an ISO"
+  else
+    echo "initrd directory does not exist: $INITRD"
+  fi
+}
+
+function MakeNewIso ()
+{
+  clear
+  echo "Making new ISO from iso_contents and initrd"
+  cd $ISODIR
+  if [ -d "iso_contents" ] && [ -d "initrd" ]; then
+    echo "Creating ISO from iso_contents and initrd"
+    cd initrd
+    sudo sh -c 'find . | cpio --create --format='newc' | gzip -6f > ../iso_contents/boot/corepure64.gz'
+    cd ../iso_contents
+    sudo mkisofs -r -R -l -J \
+      -no-emul-boot \
+      -V TC-custom \
+      -boot-load-size 4 \
+      -boot-info-table \
+      -b boot/isolinux/isolinux.bin \
+      -c boot/isolinux/boot.cat \
+      -quiet -o ../$NEWISO \
+      ./
+    cd ..
+    sudo chown tc.staff $NEWISO
+    FILESIZE=$(stat -c%s "$NEWISO")
+    echo "Done creating $NEWISO size $FILESIZE"
+  else
+    echo "iso_contents or initrd does not exist, try ISO extract first"
+  fi
+}
+
+function PurgeExtraction ()
+{
+  clear
+  echo "Purge extraction"
+  cd $ISODIR
+
+  if [ -d "iso_contents" ] && [ -d "initrd" ]; then
+    read -p "Delete iso_conents or initrd ? [Yn]: " yesno
+    if [[ $yesno != "Y" ]]; then
+      return
+    fi
+
+    sudo rm -rf iso_contents
+    sudo rm -rf initrd
+    echo "iso_contents and initrd are deleted"
+  else
+    echo "iso_contents or initrd not exist, try ISO extract first"
+  fi
+}
+
+
+function ShowVars()
+{
+  clear
+  echo
+  echo "ISODIR=$ISODIR"
+  echo "ISOSRC=$ISOSRC"
+  echo
+  echo "LINUX=$LINUX"
+  echo "VERSION=$VERSION"
+  echo
+  echo "GLIB=$GLIB"
+  echo
+}
+
+function CleanKo()
+{
+  clear
+  echo "Clean all .ko files from recent build"
+  cd $LINUX
+  find -wholename '*.ko' -exec rm {} \;
+  echo "Done, please use make modules to build them again"
+}
+
+function MakeModules()
+{
+  clear
+  echo "Making modules using all cores"
+  cd $LINUX
+  make modules -j`nproc`
+  echo "Done"
+}
+
+function MakeKernel()
+{
+  clear
+  echo "Making kernel bzImage using all cores"
+  cd $LINUX
+  make bzImage -j`nproc`
+  echo "Done"
+}
+
+function Reconfigure()
+{
+  clear
+  cd $LINUX
+  make menuconfig
+}
+
+function MakeDefConfig()
+{
+  clear
+  cd $LINUX
+  make defconfig
+}
+
+function LoadPackages()
+{
+  clear
+  tce-load -wi coreutils compiletc gcc binutils make squashfs-tools ncursesw-dev bison flex-dev openssl-1.1.1-dev elfutils-dev gettext-dev bc perl5
+  echo "Done"
+}
+
+function InstallGLib()
+{
+  clear
+  echo "install GLib"
+
+  if [ ! -d $GLIB ]; then
+    echo "source $GLIB does not exist"
+    exit
+  fi
+
+  DEST=$ISODIR/initrd/lib
+
+  if [ ! -d $DEST ]; then
+    echo "lib destination $DEST does not exist"
+    exit
+  fi
+
+  FILES="$GLIB/*.so*"
+  for f in $FILES
+  do
+    if [ ! -h "$f" ]
+    then
+      sudo strip $f 2>/dev/null
+      if [ $? -eq 0 ]; then
+        sudo cp -a $f $DEST
+      fi
+    else
+      sudo cp -a $f $DEST
+    fi
+  done
+  echo "Done"
+}
+
+function Unknown ()
+{
+  clear
+  echo "Say what?"
+}
+
+clear
+
+if [ "$(id -u)" -eq 0 ]; then echo "Please run as user (not root)." >&2; exit 1; fi
+
+if [ ! -w $WORKINGDIR ]; then echo "User must have WRITE permission on $WORKINGDIR" >&2; exit 1; fi
+
+if [ ! -d "$ISODIR" ]; then
+  echo "ISODIR directory not found $ISODIR"
+
+  read -p "Getting $ISOSRC From official Tinycore site ? [Yn]: " yesno
+    if [[ $yesno != "Y" ]]; then
+      exit
+    fi
+  mkdir $ISODIR
+  cd $ISODIR
+  wget "$REMOTE$ISOSRC"
+  IsoExtract
+fi
+
+if [ ! -f "$ISODIR/$ISOSRC" ]; then echo "$ISOSRC can not be found in directory $ISODIR"; exit 1; fi
+
+if [ ! -d "$LINUX" ]; then
+  echo "LINUX directory for kernel linux-$KERNELVERSION not found"
+
+  read -p "Getting linux-$KERNELVERSION From official kernel.org site ? [Yn]: " yesno
+    if [[ $yesno != "Y" ]]; then
+      exit
+    fi
+  cd $WORKINGDIR
+  wget "$LINSRC"
+  echo "extracting sources ..."
+  tar -xf linux-$KERNELVERSION.tar.xz
+  rm linux-$KERNELVERSION.tar.xz  
+fi
+
+
+ShowVars
+
+while :
+do
+  echo
+  echo "ISO-Builder $ISOBUILDER"
+  echo "============================="
+  echo "0 - make defconfig (!!! better use your own .config file !!!)"
+  echo "r - Re-configure using make menuconfig"
+  echo "k - make bzImage (kernel)"
+  echo "m - make modules"
+  echo "i - Install Kernel and Modules"
+  echo "n - Make new ISO"
+  echo "p - Purge extraction"
+  echo "x - ISO extract"
+  echo "v - Show Variables"
+  echo "c - cleanup .ko files from current build"
+  echo "w - install all packages for the build system"
+  echo "g - install new GLib"
+  echo "q - Quit"
+  echo
+  read -p "0,r,k,m,i,n,p,x,v,c,w,g or q(uit) :" c
+  case  $c  in
+    0) MakeDefConfig ;;
+    r) Reconfigure ;;
+    d) MakeDep ;;
+    k) MakeKernel ;;
+    m) MakeModules ;;
+    i) Install ;;
+    n) MakeNewIso ;;
+    p) PurgeExtraction ;;
+    x) IsoExtract ;;
+    v) ShowVars ;;
+    c) CleanKo ;;
+    w) LoadPackages ;;
+    g) InstallGLib ;;
+    q) exit ;;
+    *) Unknown ;;
+  esac 
+done

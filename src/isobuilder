@@ -5,7 +5,7 @@
 # alphons@heijden.com
 #
 #
-ISOBUILDER="2023-01-14 v1.6"
+ISOBUILDER="2023-01-15 v1.8"
 #
 # WORKINGDIR must have write rights for executing user (not root)
 #
@@ -30,7 +30,6 @@ VERSION="$KERNELVERSION$LOCALVERSION"
 #
 # GLIB is experimental at the moment
 GLIBVERSION="glibc-2.36"
-GLIB="$WORKINGDIR/glibc-build"
 #
 KERNEL=vmlinuz64
 INITRD=$ISODIR/initrd
@@ -82,8 +81,8 @@ function Install ()
 
   if [ -d "$INITRD" ]; then
 
-    echo "1 Remove LIB directory"
-    sudo rm -rf $LIB
+    echo "1 Remove old tinycore64 modules directory"
+    sudo rm -rf $INITRD/lib/modules/*-tinycore64
 
     echo "2 Creating LIB directory"  
     sudo mkdir -p $LIB
@@ -240,15 +239,20 @@ function MakeNewGLib()
 {
   tce-load -wi python3.9 texinfo
   cd $WORKINGDIR
-  wget "https://ftp.gnu.org/gnu/glibc/$GLIBVERSION.tar.gz"
-  echo "extracting sources ..."
-  tar xzf "$GLIBVERSION.tar.gz"
-  rm "$GLIBVERSION.tar.gz"
-  mkdir glibc-build
-  cd glibc-build
+  if [ ! -d "$GLIBVERSION" ]; then
+    wget "https://ftp.gnu.org/gnu/glibc/$GLIBVERSION.tar.gz"
+    echo "extracting sources ..."
+    tar xzf "$GLIBVERSION.tar.gz"
+    rm "$GLIBVERSION.tar.gz"
+  fi
+  cd "$GLIBVERSION"
+  mkdir -p build
+  mkdir -p install
+  cd build
   echo "Configure ..."
-  ../$GLIBVERSION/configure --prefix=/ libc_cv_slibdir=/lib
+  ../configure --prefix="$WORKINGDIR/$GLIBVERSION/install"
   make -j`nproc`
+  make install
 }
 
 
@@ -257,17 +261,22 @@ function InstallGLib()
   clear
   echo "install GLib"
 
+  GLIB="$WORKINGDIR/$GLIBVERSION/install/lib"
+
   if [ ! -d $GLIB ]; then
-    echo "source $GLIB does not exist"
+    echo "installdir $GLIB does not exist"
+    exit
+  fi
+  
+  LIBDEST="$INITRD/lib"
+  
+  if [ ! -d $LIBDEST ]; then
+    echo "lib destination $LIBDEST does not exist"
     exit
   fi
 
-  DEST=$ISODIR/initrd/lib
-
-  if [ ! -d $DEST ]; then
-    echo "lib destination $DEST does not exist"
-    exit
-  fi
+#  sudo find "$LIBDEST" -maxdepth 1 -type f -delete
+#  sudo find "$LIBDEST" -maxdepth 1 -type l -delete
 
   FILES="$GLIB/*.so*"
   for f in $FILES
@@ -276,12 +285,13 @@ function InstallGLib()
     then
       sudo strip $f 2>/dev/null
       if [ $? -eq 0 ]; then
-        sudo cp -a $f $DEST
+        sudo cp -a $f $LIBDEST
       fi
     else
-      sudo cp -a $f $DEST
+      sudo cp -a $f $LIBDEST
     fi
   done
+  sudo chown -R root.root $LIBDEST
   echo "Done"
 }
 

@@ -46,7 +46,21 @@ Core has autologin for user tc, where tc is a sudoer
 - type: n <enter> p <enter> 1 <enter> <enter> <enter> w <enter>
 
   tc@box:~$ sudo mkfs.ext4 /dev/sda1
-  tc@box:~$ sudo reboot
+```
+
+#### Swap partition (optional)
+
+```
+  tc@box:~$ sudo fdisk /dev/sdb
+
+- type: n <enter> p <enter> 1 <enter> <enter> <enter> w <enter>
+
+  tc@box:~$ sudo mkswap /dev/sdb1
+```
+
+Time to reboot:
+```
+tc@box:~$ sudo reboot
 ```
 
 ### Second boot having sda1 as userdata disk

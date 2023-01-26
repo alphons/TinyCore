@@ -27,9 +27,11 @@ https://download3.vmware.com/software/WKST-PLAYER-1700/VMware-player-full-17.0.0
 
 ### Small changes to the .vmx file before starting vm
 Edit de .vmx file to change scsi0 and ehternet0 to vmware stuff
+```
 scsi0.virtualDev = "pvscsi"
 ethernet0.virtualDev = "vmxnet3"
-  
+bios.bootdelay = 5000
+```  
   - Play Virtual Machine
  
 ### First boot

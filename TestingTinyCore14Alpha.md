@@ -213,10 +213,10 @@ tmpfs           2.0G     0  2.0G   0% /dev/shm
 
 # Functional tests
 
-- starting samba
-- starting ssh
-- compiling kernel Linux-6.1.2
-- making executing dotnet console program
+- starting samba (shares / to everyone as root for testing)
+- starting ssh (ssh login works)
+- compiling kernel Linux-6.1.2 (making new iso and booting)
+- making and executing dotnet console program
 - starting mongo database
 
 

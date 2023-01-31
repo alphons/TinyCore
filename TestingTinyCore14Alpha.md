@@ -1,4 +1,8 @@
-# Testing Tinyore 14 Alpha
+# Testing Tinyore 14.0 Alpha
+
+This test script is used in testing Tinycore 14 alpha
+
+![screendump of boot process](tc14.png)
 
 ```
 #!/bin/bash

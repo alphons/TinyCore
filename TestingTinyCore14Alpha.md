@@ -93,9 +93,8 @@ echo "samba and ssh are started by /opt/bootlocal.sh"
 #echo "Copy .ashrc to home tc copy .joerc to home tc and root"
 
 #cp .joerc /home/tc
-#sudo cp .joerc /root
-
 #cp .ashrc /home/tc
+#sudo cp .joerc /root
 
 echo "Some default .filetool.lst for backup"
 

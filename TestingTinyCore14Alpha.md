@@ -1,4 +1,4 @@
-# Testing Tinyore 14.0 Alpha
+# Testing TinyCore 14.0 Alpha
 
 ![screendump of boot process](tc14.png)
 

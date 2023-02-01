@@ -98,7 +98,7 @@ echo "samba and ssh are started by /opt/bootlocal.sh"
 
 echo "Some default .filetool.lst for backup"
 
-cat > /opt/filetool.lst << "EOF"
+cat > /opt/.filetool.lst << "EOF"
 opt
 home
 etc/passwd

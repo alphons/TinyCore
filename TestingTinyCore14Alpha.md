@@ -104,7 +104,7 @@ home
 etc/passwd
 etc/shadow
 usr/local/etc/ssh
-usr/local/etc/samba/smb.conf
+usr/local/etc/samba
 EOF
 
 echo "Running filetool.sh -b"

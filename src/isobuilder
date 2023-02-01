@@ -5,7 +5,7 @@
 # alphons@heijden.com
 #
 #
-ISOBUILDER="2023-01-15 v1.8"
+ISOBUILDER="2023-02-01 v1.9"
 #
 # WORKINGDIR must have write rights for executing user (not root)
 #
@@ -14,7 +14,7 @@ RELEASE="release"
 ISOSRC=CorePure64-13.1.iso
 #
 # new kernel version goes here
-KERNELVERSION="6.1.6"
+KERNELVERSION="6.1.2"
 #
 # ---------------------------------------------------------
 #
@@ -63,11 +63,24 @@ function IsoExtract ()
   sudo rsync -a -H iso_contents_org/ iso_contents/
   sudo umount iso_contents_org
   sudo rm -rf iso_contents_org
+  MakeInitRd $ISODIR/iso_contents/boot
+}
+
+function MakeInitRd()
+{
+  CONTENTSBOOT=$1
   echo "making initrd"
   sudo mkdir initrd
   cd initrd
-  sudo gunzip -c ../iso_contents/boot/corepure64.gz | sudo cpio -id -H newc
-  sudo rm ../iso_contents/boot/corepure64.gz
+  if [[ -f $COMTENTSBOOT/corepure64.gz ]]; then
+    sudo gunzip -c $CONTENTSBOOT/corepure64.gz | sudo cpio -id -H newc
+  fi
+  if [[ -f $COMTENTSBOOT/rootfs64.gz ]]; then
+    sudo gunzip -c $CONTENTSBOOT/rootfs64.gz | sudo cpio -id -H newc
+  fi
+  if [[ -f $CONTENTSBOOT/modules64.gz ]]; then
+    sudo gunzip -c $CONTENTSBOOT/modules64.gz | sudo cpio -id -H newc
+  fi
   echo "Done"
 }
 
@@ -119,16 +132,27 @@ function Install ()
   fi
 }
 
-function MakeNewIso ()
+function MakeISOFS()
 {
-  clear
-  echo "Making new ISO from iso_contents and initrd"
+  echo "Make ISO FS"
+  echo "==========="
   cd $ISODIR
-  if [ -d "iso_contents" ] && [ -d "initrd" ]; then
-    echo "Creating ISO from iso_contents and initrd"
-    cd initrd
-    sudo sh -c 'find . | cpio --create --format='newc' | gzip -6f > ../iso_contents/boot/corepure64.gz'
-    cd ../iso_contents
+  if [[ -d "iso_contents" ]]; then
+    echo "Creating ISO from only iso_contents (no initrd)"
+    cd iso_contents
+
+    cd boot
+    
+    if [ -f corepure64.gz ]; then
+      echo "initrd points to corepure64.gz"
+      sudo sed -i 's/\tinitrd.*/\tinitrd \/boot\/corepure64.gz/g' isolinux/isolinux.cfg
+    fi
+    
+    if [ -f rootfs64.gz ] && [ -f modules64.gz ]; then
+      echo "initrd points to rootfs64.gz and modules64.gz"
+      sudo sed -i 's/\tinitrd.*/\tinitrd \/boot\/rootfs64.gz,\/boot\/modules64.gz/g' isolinux/isolinux.cfg
+    fi
+    cd ..
     sudo mkisofs -r -R -l -J \
       -no-emul-boot \
       -V TC-custom \
@@ -139,9 +163,25 @@ function MakeNewIso ()
       -quiet -o ../$NEWISO \
       ./
     cd ..
-    sudo chown tc.staff $NEWISO
+    sudo chown tc:staff $NEWISO
     FILESIZE=$(stat -c%s "$NEWISO")
     echo "Done creating $NEWISO size $FILESIZE"
+  else
+    echo "iso_contents does not exist, try ISO extract first"
+  fi
+} 
+
+
+function MakeNewIso ()
+{
+  clear
+  echo "Making new ISO from iso_contents and initrd"
+  cd $ISODIR
+  if [ -d "iso_contents" ] && [ -d "initrd" ]; then
+    echo "Creating corepure64.gz from initrd"
+    cd initrd
+    sudo sh -c 'find . | cpio --create --format='newc' | gzip -6f > ../iso_contents/boot/corepure64.gz'
+    MakeISOFS
   else
     echo "iso_contents or initrd does not exist, try ISO extract first"
   fi
@@ -182,14 +222,15 @@ function ShowVars()
   echo
 }
 
-function CleanKo()
+function MrProper()
 {
   clear
-  echo "Clean all .ko files from recent build"
+  echo "Clean it all"
   cd $LINUX
-  find -wholename '*.ko' -exec rm {} \;
-  echo "Done, please use make modules to build them again"
+  make mrproper
+  echo "Done"
 }
+
 
 function MakeModules()
 {
@@ -216,11 +257,11 @@ function Reconfigure()
   make menuconfig
 }
 
-function MakeDefConfig()
+function MakeNoConfig()
 {
   clear
   cd $LINUX
-  make defconfig
+  make noconfig
 }
 
 function LoadPackages()
@@ -291,15 +332,10 @@ function InstallGLib()
       sudo cp -a $f $LIBDEST
     fi
   done
-  sudo chown -R root.root $LIBDEST
+  sudo chown -R root:root $LIBDEST
   echo "Done"
 }
 
-function Unknown ()
-{
-  clear
-  echo "Say what?"
-}
 
 clear
 
@@ -344,7 +380,8 @@ do
   echo
   echo "ISO-Builder $ISOBUILDER"
   echo "============================="
-  echo "0 - make defconfig (!!! better use your own .config file !!!)"
+  echo "c - make mrproper"
+  echo "0 - make allnoconfig (!!! better use your own .config file !!!)"
   echo "r - Re-configure using make menuconfig"
   echo "k - make bzImage (kernel)"
   echo "m - make modules"
@@ -353,18 +390,19 @@ do
   echo "p - Purge extraction"
   echo "x - ISO extract"
   echo "v - Show Variables"
-  echo "c - cleanup .ko files from current build"
   echo "w - install all packages for the build system"
+  echo "s - Make ISO FS (modules64.gz, rootfs64.gz or corepure64.gz) and vmlinuz64"
   echo
-  echo "s - show current GLib compatibilty"
-  echo "l - make new GLib"
-  echo "g - install new GLib (experimental)"
+  echo "1 - show current GLib compatibilty"
+  echo "2 - make new GLib"
+  echo "3 - install new GLib (experimental)"
   echo
   echo "q - Quit"
   echo
   read -p "0,r,k,m,i,n,p,x,v,c,w,g or q(uit) :" c
   case  $c  in
-    0) MakeDefConfig ;;
+    c) MrProper ;;
+    0) MakeNoConfig ;;
     r) Reconfigure ;;
     d) MakeDep ;;
     k) MakeKernel ;;
@@ -374,12 +412,12 @@ do
     p) PurgeExtraction ;;
     x) IsoExtract ;;
     v) ShowVars ;;
-    c) CleanKo ;;
     w) LoadPackages ;;
-    s) ShowGLibCompat ;;
-    l) MakeNewGLib ;;
-    g) InstallGLib ;;
+    s) MakeISOFS ;;
+    1) ShowGLibCompat ;;
+    2) MakeNewGLib ;;
+    3) InstallGLib ;;
     q) exit ;;
-    *) Unknown ;;
+    *) echo "Say what? $c" ;;
   esac 
 done

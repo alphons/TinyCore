@@ -351,7 +351,10 @@ if [ "$(id -u)" -eq 0 ]; then echo "Please run as user (not root)."; exit 1; fi
 
 if [ ! -d $WORKINGDIR ]; then echo "Directory $WORKINGDIR does not exist"; exit 1; fi
 
-if [ ! -w $WORKINGDIR ]; then echo "User must have WRITE permission on $WORKINGDIR"; exit 1; fi
+if [ ! -w $WORKINGDIR ]; then 
+  sudo chown root:staff $WORKINGDIR
+  sudo chmod 775 $WORKINGDIR
+fi
 
 if [ ! -d $ISODIR ]; then mkdir $ISODIR; fi
 

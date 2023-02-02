@@ -92,29 +92,32 @@ function Install ()
 
   if [ -d "$INITRD" ]; then
 
-    echo "1 Remove old tinycore64 modules directory"
+    echo "0 Remove old tinycore64 modules directory"
     sudo rm -rf $INITRD/lib/modules/*-tinycore64
 
-    echo "2 Creating LIB directory"  
+    echo "1 Creating LIB directory"  
     sudo mkdir -p $LIB
 
-    echo "3 Installing modules in $LIB (takes a while)"
+    echo "2 Installing modules in $LIB (takes a while)"
     sudo make INSTALL_MOD_PATH=$INITRD modules_install >/dev/null
   
-    echo "4 Compressing modules in LIB directory"
+    echo "3 Compressing modules in LIB directory"
     sudo find $LIB -name '*.ko' -exec gzip -9 {} \;
 
     sudo rm -rf $LIB/build
     sudo rm -rf $LIB/source
   
-    echo "5 Depmodding the new gzipped modules"
+    echo "4 Depmodding the new gzipped modules"
     sudo depmod -b $INITRD $LIBNAME
   
-    echo "6 Linking tinycore usr/local/lib new version kernel.tclocal"
+    echo "5 Linking tinycore usr/local/lib new version kernel.tclocal"
     sudo ln -s /usr/local/lib/modules/$LIBNAME/ $LIB/kernel.tclocal
 
     TOTAL=`find $LIB -name '*.ko.gz' | wc -l`
-    echo "7 Modules (total $TOTAL) are ready in $LIB"
+    echo "6 Modules (total $TOTAL) are ready in $LIB"
+
+    echo "7 Making tree from $LIBNAME in $RELEASE"
+    tree -h $ISODIR/initrd/lib/modules/$LIBNAME/kernel > $ISODIR/tree.txt
 
     echo "8 removing old kernel"  
     sudo rm $BOOT/$KERNEL

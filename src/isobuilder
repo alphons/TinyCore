@@ -34,12 +34,10 @@ INITRD=$ISODIR/initrd
 BOOT=$ISODIR/iso_contents/boot
 #
 #
-if [ ! -x /usr/local/bin/mkisofs ]; then
-  tce-load -wi mkisofs-tools
-fi
-if [ ! -x /usr/local/bin/rsync ]; then
-  tc tce-load -wi rsync
-fi
+echo "checking packages"
+tce-load -wi rsync mkisofs-tools >/dev/null
+tce-load -wi coreutils compiletc gcc binutils make squashfs-tools ncursesw-dev bison >/dev/null
+tce-load -wi flex-dev openssl-1.1.1-dev elfutils-dev gettext-dev bc perl5 python3.9 texinfo >/dev/null
 #
 #
 function IsoExtract () 
@@ -219,11 +217,7 @@ function ShowVars()
   echo "ISODIR=$ISODIR"
   echo "ISOSRC=$ISOSRC"
   echo "NEWISO=$NEWISO"
-  echo
   echo "LINUX=$LINUX"
-  echo "VERSION=$VERSION"
-  echo
-  echo "GLIB=$GLIB"
   echo
 }
 
@@ -351,13 +345,16 @@ function InstallGLib()
 }
 
 
-clear
+echo
 
-if [ "$(id -u)" -eq 0 ]; then echo "Please run as user (not root)." >&2; exit 1; fi
+if [ "$(id -u)" -eq 0 ]; then echo "Please run as user (not root)."; exit 1; fi
 
-if [ ! -w $WORKINGDIR ]; then echo "User must have WRITE permission on $WORKINGDIR" >&2; exit 1; fi
+if [ ! -d $WORKINGDIR ]; then echo "Directory $WORKINGDIR does not exist"; exit 1; fi
 
-mkdir -p $ISODIR
+if [ ! -w $WORKINGDIR ]; then echo "User must have WRITE permission on $WORKINGDIR"; exit 1; fi
+
+if [ ! -d $ISODIR ]; then mkdir $ISODIR; fi
+
 cd $ISODIR
 if [ ! -f "$ISOSRC" ]; then
   read -p "Getting $ISOSRC From official Tinycore site ? [Yn]: " yesno
@@ -369,6 +366,8 @@ fi
 
 if [ ! -f "$ISODIR/$ISOSRC" ]; then echo "$ISOSRC can not be found in directory $ISODIR"; exit 1; fi
 
+cd $WORKINGDIR
+
 if [ ! -d "$LINUX" ]; then
   echo "LINUX directory for kernel $LINUX not found"
 
@@ -376,7 +375,6 @@ if [ ! -d "$LINUX" ]; then
     if [[ $yesno != "Y" ]]; then
       exit
     fi
-  cd $WORKINGDIR
   wget "$LINSRC"
   echo "extracting sources ..."
   tar -xf $LINUX.tar.xz
@@ -384,6 +382,7 @@ if [ ! -d "$LINUX" ]; then
   rm $LINUX.tar.xz  
 fi
 
+cd $WORKINGDIR
 
 ShowVars
 
@@ -405,18 +404,13 @@ do
   echo "w - install all packages for the build system"
   echo "s - Make ISO FS (modules64.gz, rootfs64.gz or corepure64.gz) and vmlinuz64"
   echo
-  echo "1 - show current GLib compatibilty"
-  echo "2 - make new GLib"
-  echo "3 - install new GLib (experimental)"
-  echo
   echo "q - Quit"
   echo
-  read -p "0,r,k,m,i,n,p,x,v,c,w,g or q(uit) :" c
+  read -p "c,0,r,k,m,i,n,p,x,v,w,s or q(uit) :" c
   case  $c  in
     c) MrProper ;;
     0) MakeNoConfig ;;
     r) Reconfigure ;;
-    d) MakeDep ;;
     k) MakeKernel ;;
     m) MakeModules ;;
     i) Install ;;
@@ -426,9 +420,6 @@ do
     v) ShowVars ;;
     w) LoadPackages ;;
     s) MakeISOFS ;;
-    1) ShowGLibCompat ;;
-    2) MakeNewGLib ;;
-    3) InstallGLib ;;
     q) exit ;;
     *) echo "Say what? $c" ;;
   esac 

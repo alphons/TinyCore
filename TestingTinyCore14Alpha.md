@@ -29,7 +29,13 @@ if [[ $onetwo == "1" ]]; then
 
   filetool.sh -b
 
- sudo reboot
+  read -p "Reboot [Yn] ? " yesno
+  if [[ $yesno == "Y" ]]; then
+    sudo reboot
+  else
+    echo "sudo reboot as soon as possible"
+    exit 0
+  fi
 fi
 
 if [[ $onetwo == "2" ]]; then
@@ -44,11 +50,24 @@ tce-load -wi curl dotnet7-sdk mongo
 echo "Packages are installed"
 
 echo "Making the system having passwords for tc and root"
-
+echo "For publishing on github, this part is skipped"
 #sudo cp passwd /etc
 #sudo cp shadow /etc
 
-echo "Making samba for everyone"
+echo "Setting ntp (time) for the Netherlands etc/ntp.conf"
+
+sudo mkdir -p /etc/ntp
+sudo tee /etc/ntp.conf >/dev/null << "EOF"
+# --- GENERAL CONFIGURATION ---
+server 0.nl.pool.ntp.org
+server 1.nl.pool.ntp.org
+server 2.nl.pool.ntp.org
+server 3.nl.pool.ntp.org
+# Drift file.
+driftfile /etc/ntp/drift
+EOF
+
+echo "Creating some basic samba config (everyone is root!)"
   
 sudo mkdir -p /usr/local/etc/samba
 sudo tee /usr/local/etc/samba/smb.conf >/dev/null << "EOF"
@@ -57,7 +76,7 @@ sudo tee /usr/local/etc/samba/smb.conf >/dev/null << "EOF"
    guest account = root
    workgroup = WORKGROUP
 
-   netbios name = tinycore14
+   netbios name = tc64a14
    dns proxy = no
    max log size = 1000
 
@@ -73,36 +92,77 @@ sudo tee /usr/local/etc/samba/smb.conf >/dev/null << "EOF"
    guest ok = yes
 EOF
 
-echo "Basic setup for ssh"
+echo "Creating some basic ssh config"
 
 sudo cp /usr/local/etc/ssh/ssh_config.orig /usr/local/etc/ssh/ssh_config
 sudo cp /usr/local/etc/ssh/sshd_config.orig /usr/local/etc/ssh/sshd_config
 
-echo "Creating entries in bootlocal.sh for samba and ssh"
+echo "Creating entries in bootlocal.sh for ntpd, samba and ssh"
 
 echo "#!/bin/sh" | sudo tee /opt/bootlocal.sh >/dev/null
 echo "/usr/local/etc/init.d/openssh start" | sudo tee -a /opt/bootlocal.sh >/dev/null
 echo "/usr/local/etc/init.d/samba start" | sudo tee -a /opt/bootlocal.sh >/dev/null
+echo "export TZ=CET" | sudo tee -a /opt/bootlocal.sh >/dev/null
+echo "/usr/sbin/ntpd" | sudo tee -a /opt/bootlocal.sh >/dev/null
 
-echo "Starting ssh and samba deamon"
+echo "Executing opt/bootlocal.sh"
 
 sudo /opt/bootlocal.sh
 
-echo "samba and ssh are started by /opt/bootlocal.sh"
+echo "ntpd, ssh and samba are started"
 
-#echo "Copy .ashrc to home tc copy .joerc to home tc and root"
+echo "Make .ashrc for user tc"
 
-#cp .joerc /home/tc
-#cp .ashrc /home/tc
-#sudo cp .joerc /root
+cat > /home/tc/.ashrc << "EOF"
+# ~/.ashrc: Executed by Shells.
+#
+. /etc/init.d/tc-functions
+if [ -n "$DISPLAY" ]
+then
+	`which editor >/dev/null` && EDITOR=editor || EDITOR=joe
+else
+	EDITOR=joe
+fi
+export EDITOR
 
-echo "Some default .filetool.lst for backup"
+# Alias definitions.
+#
+alias df='df -h'
+alias du='du -h'
 
-cat > /opt/.filetool.lst << "EOF"
+alias ls='ls --color=auto -p'
+alias ll='ls -l'
+alias la='ls -la'
+
+# Avoid errors... use -f to skip confirmation.
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -i'
+
+alias ce='cd /etc/sysconfig/tcedir'
+EOF
+
+
+echo "making .joerc for tc and root"
+
+cp /usr/local/etc/joe/joerc /home/tc/.joerc
+sudo cp /usr/local/etc/joe/joerc /root/.joerc
+
+echo "Patching .joerc for nobackups"
+
+sed -i 's/.*-nobackups/-nobackups/' /home/tc/.joerc
+sed -i 's/.*-nobackups/-nobackups/' /root/.joerc
+
+echo "Copy .filetool.lst for backup those files"
+
+cat > /opt/filetool.lst << "EOF"
 opt
 home
+root
 etc/passwd
 etc/shadow
+etc/ntp
+etc/ntp.conf
 usr/local/etc/ssh
 usr/local/etc/samba
 EOF
@@ -116,6 +176,7 @@ echo "--"
 echo "Ready"
 
 fi
+
 ```
 
 # List of installed extensions

@@ -5,28 +5,26 @@
 # alphons@heijden.com
 #
 #
-ISOBUILDER="2023-02-01 v1.9"
+ISOBUILDER="2023-02-03 v1.12"
 #
 # WORKINGDIR must have write rights for executing user (not root)
 #
 WORKINGDIR="/mnt/sda1"
 RELEASE="release"
-ISOSRC=CorePure64-13.1.iso
-#
-# new kernel version goes here
+ISOSRC="CorePure64-14.a.iso"
+NEWISO="new-CorePure64-14.a.iso"
 KERNELVERSION="6.1.2"
 #
 # ---------------------------------------------------------
 #
-LOCALVERSION="-tinycore64"
-#
 REMOTE="http://www.tinycorelinux.net/13.x/x86_64/release/"
 ISODIR="$WORKINGDIR/$RELEASE"
 #
-LINSRC="https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-$KERNELVERSION.tar.xz"
-LINUX="$WORKINGDIR/linux-$KERNELVERSION"
+LINUX="linux-$KERNELVERSION"
+LINSRC="https://cdn.kernel.org/pub/linux/kernel/v6.x/$LINUX.tar.xz"
+LINUXPATH="$WORKINGDIR/$LINUX"
 #
-VERSION="$KERNELVERSION$LOCALVERSION"
+LIBNAME="$KERNELVERSION-tinycore64"
 #
 # GLIB is experimental at the moment
 GLIBVERSION="glibc-2.36"
@@ -34,7 +32,6 @@ GLIBVERSION="glibc-2.36"
 KERNEL=vmlinuz64
 INITRD=$ISODIR/initrd
 BOOT=$ISODIR/iso_contents/boot
-NEWISO="new-${ISOSRC}"
 #
 #
 if [ ! -x /usr/local/bin/mkisofs ]; then
@@ -47,7 +44,7 @@ fi
 #
 function IsoExtract () 
 {
-  clear
+  echo
   echo "Unpacking ISO to iso_contents and initrd"  
   cd $ISODIR
   if [ -d "iso_contents" ] && [ -d "initrd" ]; then
@@ -72,13 +69,16 @@ function MakeInitRd()
   echo "making initrd"
   sudo mkdir initrd
   cd initrd
-  if [[ -f $COMTENTSBOOT/corepure64.gz ]]; then
+  if [[ -f $CONTENTSBOOT/corepure64.gz ]]; then
+    echo "gunzip corepure64.gz"
     sudo gunzip -c $CONTENTSBOOT/corepure64.gz | sudo cpio -id -H newc
   fi
-  if [[ -f $COMTENTSBOOT/rootfs64.gz ]]; then
+  if [[ -f $CONTENTSBOOT/rootfs64.gz ]]; then
+    echo "gunzip rootfs64.gz"
     sudo gunzip -c $CONTENTSBOOT/rootfs64.gz | sudo cpio -id -H newc
   fi
   if [[ -f $CONTENTSBOOT/modules64.gz ]]; then
+    echo "gunzip modules64.gz"
     sudo gunzip -c $CONTENTSBOOT/modules64.gz | sudo cpio -id -H newc
   fi
   echo "Done"
@@ -86,11 +86,11 @@ function MakeInitRd()
 
 function Install () 
 {
-  clear
-  cd $LINUX
+  echo
+  cd $LINUXPATH
   echo "Install kernel and modules"
 
-  LIB=$INITRD/lib/modules/$VERSION
+  LIB=$INITRD/lib/modules/$LIBNAME
 
   if [ -d "$INITRD" ]; then
 
@@ -110,10 +110,10 @@ function Install ()
     sudo rm -rf $LIB/source
   
     echo "5 Depmodding the new gzipped modules"
-    sudo depmod -b $INITRD $VERSION
+    sudo depmod -b $INITRD $LIBNAME
   
     echo "6 Linking tinycore usr/local/lib new version kernel.tclocal"
-    sudo ln -s /usr/local/lib/modules/$VERSION/ $LIB/kernel.tclocal
+    sudo ln -s /usr/local/lib/modules/$LIBNAME/ $LIB/kernel.tclocal
 
     TOTAL=`find $LIB -name '*.ko.gz' | wc -l`
     echo "7 Modules (total $TOTAL) are ready in $LIB"
@@ -134,8 +134,8 @@ function Install ()
 
 function MakeISOFS()
 {
+  echo
   echo "Make ISO FS"
-  echo "==========="
   cd $ISODIR
   if [[ -d "iso_contents" ]]; then
     echo "Creating ISO from only iso_contents (no initrd)"
@@ -174,10 +174,11 @@ function MakeISOFS()
 
 function MakeNewIso ()
 {
-  clear
   echo "Making new ISO from iso_contents and initrd"
   cd $ISODIR
   if [ -d "iso_contents" ] && [ -d "initrd" ]; then
+    echo "renoving old gz files form iso_contents/boot"
+    sudo rm -rf ./iso_contents/boot/*.gz
     echo "Creating corepure64.gz from initrd"
     cd initrd
     sudo sh -c 'find . | cpio --create --format='newc' | gzip -6f > ../iso_contents/boot/corepure64.gz'
@@ -189,7 +190,7 @@ function MakeNewIso ()
 
 function PurgeExtraction ()
 {
-  clear
+  echo
   echo "Purge extraction"
   cd $ISODIR
 
@@ -207,13 +208,17 @@ function PurgeExtraction ()
   fi
 }
 
+KERNELVERSION="6.1.2"
+
 
 function ShowVars()
 {
-  clear
   echo
+  echo "WORKINGDIR=$WORKINGDIR"
+  echo "RELEASE=$RELEASE"
   echo "ISODIR=$ISODIR"
   echo "ISOSRC=$ISOSRC"
+  echo "NEWISO=$NEWISO"
   echo
   echo "LINUX=$LINUX"
   echo "VERSION=$VERSION"
@@ -224,7 +229,7 @@ function ShowVars()
 
 function MrProper()
 {
-  clear
+  echo
   echo "Clean it all"
   cd $LINUX
   make mrproper
@@ -234,7 +239,7 @@ function MrProper()
 
 function MakeModules()
 {
-  clear
+  echo
   echo "Making modules using all cores"
   cd $LINUX
   make modules -j`nproc`
@@ -243,7 +248,7 @@ function MakeModules()
 
 function MakeKernel()
 {
-  clear
+  echo
   echo "Making kernel bzImage using all cores"
   cd $LINUX
   make bzImage -j`nproc`
@@ -252,21 +257,30 @@ function MakeKernel()
 
 function Reconfigure()
 {
-  clear
+  echo
+  echo "make menuconfig"
   cd $LINUX
   make menuconfig
 }
 
 function MakeNoConfig()
 {
-  clear
+  echo
+  echo "make allnoconfig"
   cd $LINUX
-  make noconfig
+  make allnoconfig
+  read -p "Change .config to SMP (Symmetrical Multi Processing) [Yn] ? " yesno
+  if [[ $yesno == "Y" ]]; then
+    sed -i 's/CONFIG_BROKEN_ON_SMP=y/# CONFIG_BROKEN_ON_SMP is not set/g' .config
+    sed -i 's/# CONFIG_SMP is not set/CONFIG_SMP=y/g' .config
+    echo "changed to SMP"
+  fi
 }
 
 function LoadPackages()
 {
-  clear
+  echo
+  echo "Load all needed packages"
   tce-load -wi coreutils compiletc gcc binutils make squashfs-tools ncursesw-dev bison flex-dev openssl-1.1.1-dev elfutils-dev gettext-dev bc perl5
   echo "Done"
 }
@@ -299,7 +313,7 @@ function MakeNewGLib()
 
 function InstallGLib()
 {
-  clear
+  echo
   echo "install GLib"
 
   GLIB="$WORKINGDIR/$GLIBVERSION/install/lib"
@@ -343,33 +357,31 @@ if [ "$(id -u)" -eq 0 ]; then echo "Please run as user (not root)." >&2; exit 1;
 
 if [ ! -w $WORKINGDIR ]; then echo "User must have WRITE permission on $WORKINGDIR" >&2; exit 1; fi
 
-if [ ! -d "$ISODIR" ]; then
-  echo "ISODIR directory not found $ISODIR"
-
+mkdir -p $ISODIR
+cd $ISODIR
+if [ ! -f "$ISOSRC" ]; then
   read -p "Getting $ISOSRC From official Tinycore site ? [Yn]: " yesno
-    if [[ $yesno != "Y" ]]; then
-      exit
-    fi
-  mkdir $ISODIR
-  cd $ISODIR
-  wget "$REMOTE$ISOSRC"
-  IsoExtract
+  if [[ $yesno == "Y" ]]; then
+    wget "$REMOTE$ISOSRC"
+    IsoExtract
+  fi
 fi
 
 if [ ! -f "$ISODIR/$ISOSRC" ]; then echo "$ISOSRC can not be found in directory $ISODIR"; exit 1; fi
 
 if [ ! -d "$LINUX" ]; then
-  echo "LINUX directory for kernel linux-$KERNELVERSION not found"
+  echo "LINUX directory for kernel $LINUX not found"
 
-  read -p "Getting linux-$KERNELVERSION From official kernel.org site ? [Yn]: " yesno
+  read -p "Getting $LINUX From official kernel.org site ? [Yn]: " yesno
     if [[ $yesno != "Y" ]]; then
       exit
     fi
   cd $WORKINGDIR
   wget "$LINSRC"
   echo "extracting sources ..."
-  tar -xf linux-$KERNELVERSION.tar.xz
-  rm linux-$KERNELVERSION.tar.xz  
+  tar -xf $LINUX.tar.xz
+  echo "removing tar file"
+  rm $LINUX.tar.xz  
 fi
 
 

@@ -13,7 +13,7 @@ WORKINGDIR="/mnt/sda1"
 RELEASE="release"
 ISOSRC="CorePure64-14.a.iso"
 NEWISO="new-CorePure64-14.a.iso"
-KERNELVERSION="6.1.2"
+KERNELVERSION="6.1.9"
 #
 # ---------------------------------------------------------
 #

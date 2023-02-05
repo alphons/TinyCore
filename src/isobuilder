@@ -33,6 +33,7 @@ KERNEL=vmlinuz64
 INITRD=$ISODIR/initrd
 BOOT=$ISODIR/iso_contents/boot
 #
+SCRIPTDIR=$PWD
 #
 echo "checking packages"
 tce-load -wi rsync mkisofs-tools >/dev/null
@@ -347,6 +348,34 @@ function InstallGLib()
   echo "Done"
 }
 
+function SelectPreConfig()
+{
+  echo
+  echo "Creating .config file for $LINUX"
+  cd $SCRIPTDIR
+  files=`ls -a Config*`
+  i=1
+  for file in $files; do
+    echo "$i - $file"
+    i="$(($i + 1))"
+  done
+  echo
+  read -p "Select Config file to install q=quit ? " ccc
+  if [ $ccc == "q" ]; then return ; fi
+
+  i=1
+  for file in $files; do
+    if [[ $i == $ccc ]]; then
+      echo
+      echo "Copy $file to $LINUXPATH/.config"
+      cp -f $file $LINUXPATH/.config
+    fi
+    i="$(($i + 1))"
+  done
+}
+
+
+# ===========================================
 
 echo
 
@@ -399,6 +428,7 @@ do
   echo "============================="
   echo "c - make mrproper"
   echo "0 - make allnoconfig (!!! better use your own .config file !!!)"
+  echo "C - List and select predefined config files"
   echo "r - Re-configure using make menuconfig"
   echo "k - make bzImage (kernel)"
   echo "m - make modules"
@@ -416,6 +446,7 @@ do
   case  $c  in
     c) MrProper ;;
     0) MakeNoConfig ;;
+    C) SelectPreConfig ;;
     r) Reconfigure ;;
     k) MakeKernel ;;
     m) MakeModules ;;

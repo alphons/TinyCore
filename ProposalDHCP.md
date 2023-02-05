@@ -38,5 +38,5 @@ I want to propose a change to this script.
 
 This result is showing the IP address on the console (login prompt).
 
-![show ip at login prompt](show-ip.png)
+![show ip at login prompt](show-ip2.png)
 

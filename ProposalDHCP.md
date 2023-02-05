@@ -51,5 +51,5 @@ In this way you can add something usefull to the /usr/share/udhcpc/default.scrip
 
 This result is showing the IP address on the console and restarting getty to not interfering the login prompt process.
 
-See screendump for result. (I also removed some 'clear' statements in scripts to watch te boot process in full)
+[show-ip.png]
 

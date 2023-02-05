@@ -1,4 +1,4 @@
-# Proposal: enhancement /usr/share/udhcpc/default.script
+# Proposal 2: enhancement /usr/share/udhcpc/default.script
 
 When using dhcp client on TinyCore, the shell script /etc/init.d/dhcp.sh is used.
 One of the features of udhcpc is when an IP lease is received, it runs the (default) script

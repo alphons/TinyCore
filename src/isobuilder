@@ -11,9 +11,9 @@ ISOBUILDER="2023-02-03 v1.12"
 #
 WORKINGDIR="/mnt/sda1"
 RELEASE="release"
-ISOSRC="CorePure64-14.a.iso"
-NEWISO="new-CorePure64-14.a.iso"
 KERNELVERSION="6.1.9"
+ISOSRC="CorePure64-14.a.iso"
+NEWISO="CorePure64-$KERNELVERSION.iso"
 #
 # ---------------------------------------------------------
 #
@@ -26,6 +26,8 @@ LINUXPATH="$WORKINGDIR/$LINUX"
 #
 LIBNAME="$KERNELVERSION-tinycore64"
 #
+BB=busybox-1.36.0.tar.bz2
+#
 # GLIB is experimental at the moment
 GLIBVERSION="glibc-2.36"
 #
@@ -35,12 +37,8 @@ BOOT=$ISODIR/iso_contents/boot
 #
 SCRIPTDIR=$PWD
 #
-echo "checking packages"
-tce-load -wi rsync mkisofs-tools >/dev/null
-tce-load -wi coreutils compiletc gcc binutils make squashfs-tools ncursesw-dev bison >/dev/null
-tce-load -wi flex-dev openssl-1.1.1-dev elfutils-dev gettext-dev bc perl5 python3.9 texinfo >/dev/null
-#
-#
+# ==========================================================
+
 function MakeInitRd()
 {
   CONTENTSBOOT=$1
@@ -374,68 +372,154 @@ function SelectPreConfig()
   done
 }
 
+function CheckPrereq()
+{
+  echo
+
+  echo "checking packages"
+  tce-load -wi rsync mkisofs-tools >/dev/null
+  tce-load -wi coreutils compiletc gcc binutils make squashfs-tools ncursesw-dev bison >/dev/null
+  tce-load -wi flex-dev openssl-1.1.1-dev elfutils-dev gettext-dev bc perl5 python3.9 texinfo >/dev/null
+
+  ShowVars
+
+  if [ "$(id -u)" -eq 0 ]; then echo "Please run as user (not root)."; exit 1; fi
+
+  if [ ! -d $WORKINGDIR ]; then echo "Directory $WORKINGDIR does not exist"; exit 1; fi
+
+  if [ ! -w $WORKINGDIR ]; then 
+    sudo chown root:staff $WORKINGDIR
+    sudo chmod 775 $WORKINGDIR
+  fi
+
+  if [ ! -d $ISODIR ]; then mkdir $ISODIR; fi
+
+  cd $ISODIR
+  if [ ! -d "$INITRD" ]; then
+    echo "No initrd, create new initrd from;"
+    read -p "Download official tinycore $ISOSRC = 0, Mounting boot cdrom  = 1, quit = q [01q]: " yesno
+
+    if [[ $yesno == "q" ]]; then return ; fi
+ 
+    if [[ $yesno == "0" ]]; then
+      echo "getting iso from tinycore site"
+      wget -q "$REMOTE$ISOSRC"
+      IsoExtract
+    fi
+  
+    if [[ $yesno == "1" ]]; then
+      echo "mounting cdrom"
+      sudo mount /mnt/sr0
+
+      echo "making iso_contents"
+      sudo mkdir iso_contents
+      sudo rsync -a -H /mnt/sr0/ iso_contents/
+      sudo umount /mnt/sr0
+      MakeInitRd $ISODIR/iso_contents/boot
+    fi
+    
+    echo "done."
+  fi
+
+  cd $WORKINGDIR
+
+  if [ ! -d "$LINUX" ]; then
+    echo "LINUX directory for kernel $LINUX not found"
+
+    read -p "Getting $LINUX From official kernel.org site ? [Yn]: " yesno
+      if [[ $yesno != "Y" ]]; then
+        exit
+      fi
+    wget -q "$LINSRC"
+    echo "extracting sources ..."
+    tar -xf $LINUX.tar.xz
+    echo "removing tar file"
+    rm $LINUX.tar.xz  
+  fi
+}
+
+function MakeBusyBox()
+{
+  echo
+  PKG=/tmp/pkg
+  mkdir -p "$WORKINGDIR/bb"
+  LOG="$WORKINGDIR/bb/log.txt"
+  echo -n > $LOG
+  cd "$WORKINGDIR/bb"
+  echo "Making busybox"
+  echo "=============="
+  if [[ ! -f $BB ]]; then
+    echo "gettting sources from official busybox.net site"
+    wget -q https://www.busybox.net/downloads/$BB
+  fi
+  
+  NAME=$(echo $BB | sed 's/.tar.bz2//')
+  if [[ ! -d $NAME ]]; then
+    echo "tar xf $BB"
+    tar xf $BB
+  fi
+  
+  BBTC="http://tinycorelinux.net/14.x/x86_64/release/src/busybox"
+
+  echo "Getting pataches from tinycore"
+  [ ! -f busybox-1.27.1-wget-make-default-timeout-configurable.patch ] && wget -q "$BBTC/busybox-1.27.1-wget-make-default-timeout-configurable.patch"
+  [ ! -f busybox-1.29.3_root_path.patch ] && wget -q "$BBTC/busybox-1.29.3_root_path.patch"
+  [ ! -f busybox-1.33.0_modprobe.patch ] && wget -q "$BBTC/busybox-1.33.0_modprobe.patch"
+  [ ! -f busybox-1.33.0_tc_depmod.patch ] && wget -q "$BBTC/busybox-1.33.0_tc_depmod.patch"
+
+  cd busybox-1.36.0
+ 
+  echo "Patching sources" 
+  patch -Np1 -i ../busybox-1.27.1-wget-make-default-timeout-configurable.patch >/dev/null 2>&1
+  patch -Np1 -i ../busybox-1.29.3_root_path.patch >/dev/null 2>&1
+  patch -Np1 -i ../busybox-1.33.0_modprobe.patch >/dev/null 2>&1
+  patch -Np0 -i ../busybox-1.33.0_tc_depmod.patch >/dev/null 2>&1
+
+  echo "Getting configuration files from tinycore"
+
+  [ ! -f busybox-1.36.0_config_suid  ] && wget -q "$BBTC/busybox-1.36.0_config_suid"
+  [ ! -f busybox-1.36.0_config_nosuid ] && wget -q "$BBTC/busybox-1.36.0_config_nosuid"
+
+  echo "Patch busybox-1.36.0_config_suid for future mount nfs to NO"
+  sed -i 's/CONFIG_FEATURE_MOUNT_NFS=y/CONFIG_FEATURE_MOUNT_NFS=n/' busybox-1.36.0_config_suid
+  
+  CC="gcc -flto -mtune=generic -Os -pipe"
+  CXX="g++ -flto -mtune=generic -Os -pipe -fno-exceptions -fno-rtti"
+
+  mkdir -p $PKG
+
+  echo "Copy tainted busybox config"
+  cp busybox-1.36.0_config_suid .config  
+  echo "make oldconfig"
+  make oldconfig >>$LOG 2>&1
+  echo "make ..."
+  make CC="$CC" CXX="$CXX" >>$LOG 2>&1
+  echo "make install"
+  sudo make CC="$CC" CXX="$CXX" CONFIG_PREFIX=$PKG install >>$LOG 2>&1
+  sudo mv $PKG/bin/busybox $PKG/bin/busybox.suid
+  sudo chmod u+s $PKG/bin/busybox.suid
+  echo "tainted busybox ready"
+
+#  read -p "Building normal busybox? [Yn] ? " yesno 
+#  if [[ $yesno != "Y" ]]; then return ; fi
+
+  echo "Copy normal busybox config"
+  cp busybox-1.36.0_config_nosuid .config
+  echo "make oldconfig"
+  make oldconfig >>$LOG 2>&1
+  echo "make ..."
+  make CC="$CC" CXX="$CXX" >>$LOG 2>&1
+  echo "make install"
+  sudo make CC="$CC" CXX="$CXX" CONFIG_PREFIX=$PKG install >>$LOG 2>&1
+  echo "Normal busybox ready" 
+  echo "Busybox is installed to $PKG"
+}
 
 # ===========================================
 
-echo
-
-if [ "$(id -u)" -eq 0 ]; then echo "Please run as user (not root)."; exit 1; fi
-
-if [ ! -d $WORKINGDIR ]; then echo "Directory $WORKINGDIR does not exist"; exit 1; fi
-
-if [ ! -w $WORKINGDIR ]; then 
-  sudo chown root:staff $WORKINGDIR
-  sudo chmod 775 $WORKINGDIR
-fi
-
-if [ ! -d $ISODIR ]; then mkdir $ISODIR; fi
-
-cd $ISODIR
-if [ ! -d "$INITRD" ]; then
-  echo "No initrd, create new initrd from;"
-  read -p "Download official tinycore $ISOSRC = 0, Mounting boot cdrom  = 1, quit = q [01q]: " yesno
-
-  if [[ $yesno == "q" ]]; then return ; fi
-
-  if [[ $yesno == "0" ]]; then
-    echo "getting iso from tinycore site"
-    wget -q "$REMOTE$ISOSRC"
-    IsoExtract
-  fi
-  
-  if [[ $yesno == "1" ]]; then
-    echo "mounting cdrom"
-    sudo mount /mnt/sr0
-
-    echo "making iso_contents"
-    sudo mkdir iso_contents
-    sudo rsync -a -H /mnt/sr0/ iso_contents/
-    sudo umount /mnt/sr0
-    MakeInitRd $ISODIR/iso_contents/boot
-  fi
-    
-  echo "done."
-fi
+CheckPrereq
 
 cd $WORKINGDIR
-
-if [ ! -d "$LINUX" ]; then
-  echo "LINUX directory for kernel $LINUX not found"
-
-  read -p "Getting $LINUX From official kernel.org site ? [Yn]: " yesno
-    if [[ $yesno != "Y" ]]; then
-      exit
-    fi
-  wget "$LINSRC"
-  echo "extracting sources ..."
-  tar -xf $LINUX.tar.xz
-  echo "removing tar file"
-  rm $LINUX.tar.xz  
-fi
-
-cd $WORKINGDIR
-
-ShowVars
 
 while :
 do
@@ -455,6 +539,7 @@ do
   echo "v - Show Variables"
   echo "w - install all packages for the build system"
   echo "s - Make ISO FS (modules64.gz, rootfs64.gz or corepure64.gz) and vmlinuz64"
+  echo "b - Make BusyBox"
   echo
   echo "q - Quit"
   echo
@@ -473,6 +558,7 @@ do
     v) ShowVars ;;
     w) LoadPackages ;;
     s) MakeISOFS ;;
+    b) MakeBusyBox ;;
     q) exit ;;
     *) echo "Say what? $c" ;;
   esac 

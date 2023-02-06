@@ -41,27 +41,6 @@ tce-load -wi coreutils compiletc gcc binutils make squashfs-tools ncursesw-dev b
 tce-load -wi flex-dev openssl-1.1.1-dev elfutils-dev gettext-dev bc perl5 python3.9 texinfo >/dev/null
 #
 #
-function IsoExtract () 
-{
-  echo
-  echo "Unpacking ISO to iso_contents and initrd"  
-  cd $ISODIR
-  if [ -d "iso_contents" ] && [ -d "initrd" ]; then
-    echo "Removing old iso_contents and initrd"
-    sudo rm -rf iso_contents
-    sudo rm -rf initrd
-  fi 
-
-  echo "making iso_contents"
-  sudo mkdir iso_contents_org
-  sudo mkdir iso_contents
-  sudo mount -o loop $ISOSRC iso_contents_org
-  sudo rsync -a -H iso_contents_org/ iso_contents/
-  sudo umount iso_contents_org
-  sudo rm -rf iso_contents_org
-  MakeInitRd $ISODIR/iso_contents/boot
-}
-
 function MakeInitRd()
 {
   CONTENTSBOOT=$1
@@ -81,6 +60,27 @@ function MakeInitRd()
     sudo gunzip -c $CONTENTSBOOT/modules64.gz | sudo cpio -id -H newc
   fi
   echo "Done"
+}
+
+function IsoExtract () 
+{
+  echo
+  echo "Unpacking ISO to iso_contents and initrd"  
+  cd $ISODIR
+  if [ -d "iso_contents" ] && [ -d "initrd" ]; then
+    echo "Removing old iso_contents and initrd"
+    sudo rm -rf iso_contents
+    sudo rm -rf initrd
+  fi 
+
+  echo "making iso_contents"
+  sudo mkdir iso_contents_org
+  sudo mkdir iso_contents
+  sudo mount -o loop $ISOSRC iso_contents_org
+  sudo rsync -a -H iso_contents_org/ iso_contents/
+  sudo umount iso_contents_org
+  sudo rm -rf iso_contents_org
+  MakeInitRd $ISODIR/iso_contents/boot
 }
 
 function Install () 
@@ -391,15 +391,31 @@ fi
 if [ ! -d $ISODIR ]; then mkdir $ISODIR; fi
 
 cd $ISODIR
-if [ ! -f "$ISOSRC" ]; then
-  read -p "Getting $ISOSRC From official Tinycore site ? [Yn]: " yesno
-  if [[ $yesno == "Y" ]]; then
-    wget "$REMOTE$ISOSRC"
+if [ ! -d "$INITRD" ]; then
+  echo "No initrd, create new initrd from;"
+  read -p "Download official tinycore $ISOSRC = 0, Mounting boot cdrom  = 1, quit = q [01q]: " yesno
+
+  if [[ $yesno == "q" ]]; then return ; fi
+
+  if [[ $yesno == "0" ]]; then
+    echo "getting iso from tinycore site"
+    wget -q "$REMOTE$ISOSRC"
     IsoExtract
   fi
-fi
+  
+  if [[ $yesno == "1" ]]; then
+    echo "mounting cdrom"
+    sudo mount /mnt/sr0
 
-if [ ! -f "$ISODIR/$ISOSRC" ]; then echo "$ISOSRC can not be found in directory $ISODIR"; exit 1; fi
+    echo "making iso_contents"
+    sudo mkdir iso_contents
+    sudo rsync -a -H /mnt/sr0/ iso_contents/
+    sudo umount /mnt/sr0
+    MakeInitRd $ISODIR/iso_contents/boot
+  fi
+    
+  echo "done."
+fi
 
 cd $WORKINGDIR
 

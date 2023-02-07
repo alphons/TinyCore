@@ -53,6 +53,7 @@ The result: diff -uprN -X dontdiff syslinuxcurrent/ syslinuxpatched/ > syslinux-
 
 [syslinux-gcc12-patches.patch](6.04/syslinux-gcc12-patches.patch)
 
+!!!Not comleted yet!!!
 [syslinux-4.07-gcc12-patches.patch](4.07/syslinux-4.07-gcc12-patches.patch)
 
 # Applying patch

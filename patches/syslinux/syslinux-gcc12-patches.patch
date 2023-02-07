@@ -1,0 +1,300 @@
+diff -uprN -X dontdiff syslinuxcurrent/com32/cmenu/libmenu/cmenu.h syslinuxpatched/com32/cmenu/libmenu/cmenu.h
+--- syslinuxcurrent/com32/cmenu/libmenu/cmenu.h	2023-02-07 11:32:40.392063182 +0100
++++ syslinuxpatched/com32/cmenu/libmenu/cmenu.h	2023-02-07 09:16:40.822878872 +0100
+@@ -131,7 +131,7 @@ typedef struct {
+     unsigned int reserved:6;	// For future expansion
+ } t_handler_return;
+ 
+-t_handler_return ACTION_VALID, ACTION_INVALID;	// Specific values
++extern t_handler_return ACTION_VALID, ACTION_INVALID;	// Specific values
+ 
+ typedef t_handler_return(*t_item_handler) (struct s_menusystem *,
+ 					   struct s_menuitem *);
+diff -uprN -X dontdiff syslinuxcurrent/com32/cmenu/libmenu/com32io.h syslinuxpatched/com32/cmenu/libmenu/com32io.h
+--- syslinuxcurrent/com32/cmenu/libmenu/com32io.h	2023-02-07 11:32:40.396063192 +0100
++++ syslinuxpatched/com32/cmenu/libmenu/com32io.h	2023-02-07 11:49:01.551650837 +0100
+@@ -31,6 +31,7 @@
+ #define CTRL_PRESSED  (1<<2)
+ // actually 1<<1 is Left Shift, 1<<0 is right shift
+ #define SHIFT_PRESSED (1<<1 | 1 <<0)
++extern com32sys_t inreg, outreg;	// Global register sets for use
+ 
+ /* BIOS Assisted output routines */
+ 
+diff -uprN -X dontdiff syslinuxcurrent/com32/cmenu/libmenu/menu.c syslinuxpatched/com32/cmenu/libmenu/menu.c
+--- syslinuxcurrent/com32/cmenu/libmenu/menu.c	2023-02-07 11:32:40.396063192 +0100
++++ syslinuxpatched/com32/cmenu/libmenu/menu.c	2023-02-07 11:49:50.299809262 +0100
+@@ -15,6 +15,7 @@
+ #include <stdlib.h>
+ #include <console.h>
+ 
++t_handler_return ACTION_VALID, ACTION_INVALID;
+ // Local Variables
+ static pt_menusystem ms;    // Pointer to the menusystem
+ char TITLESTR[] =
+diff -uprN -X dontdiff syslinuxcurrent/com32/cmenu/libmenu/syslnx.c syslinuxpatched/com32/cmenu/libmenu/syslnx.c
+--- syslinuxcurrent/com32/cmenu/libmenu/syslnx.c	2023-02-07 11:32:40.396063192 +0100
++++ syslinuxpatched/com32/cmenu/libmenu/syslnx.c	2023-02-07 09:14:47.378133423 +0100
+@@ -18,7 +18,7 @@
+ #include <syslinux/config.h>
+ #include <syslinux/video.h>
+ 
+-com32sys_t inreg, outreg;	// Global registers for this module
++extern com32sys_t inreg, outreg;	// Global registers for this module
+ 
+ void runsyslinuxcmd(const char *cmd)
+ {
+diff -uprN -X dontdiff syslinuxcurrent/com32/cmenu/libmenu/tui.c syslinuxpatched/com32/cmenu/libmenu/tui.c
+--- syslinuxcurrent/com32/cmenu/libmenu/tui.c	2023-02-07 11:32:40.396063192 +0100
++++ syslinuxpatched/com32/cmenu/libmenu/tui.c	2023-02-07 11:52:34.944438960 +0100
+@@ -16,7 +16,6 @@
+ #include <stdlib.h>
+ #include "com32io.h"
+ 
+-com32sys_t inreg, outreg;	// Global register sets for use
+ 
+ char bkspstr[] = " \b$";
+ char eolstr[] = "\n$";
+diff -uprN -X dontdiff syslinuxcurrent/com32/gplinclude/memory.h syslinuxpatched/com32/gplinclude/memory.h
+--- syslinuxcurrent/com32/gplinclude/memory.h	2023-02-07 11:32:40.404063216 +0100
++++ syslinuxpatched/com32/gplinclude/memory.h	2023-02-07 09:05:20.669210440 +0100
+@@ -37,7 +37,7 @@ struct e820entry {
+     uint64_t type;		/* type of memory segment */
+ } __attribute__ ((packed));
+ 
+-const char *const e820_types[5];
++extern const char *const e820_types[5];
+ 
+ void get_type(int, char *, int);
+ void detect_memory_e820(struct e820entry *desc, int size_map, int *size_found);
+diff -uprN -X dontdiff syslinuxcurrent/com32/hdt/hdt-ata.c syslinuxpatched/com32/hdt/hdt-ata.c
+--- syslinuxcurrent/com32/hdt/hdt-ata.c	2023-02-07 11:32:40.412063238 +0100
++++ syslinuxpatched/com32/hdt/hdt-ata.c	2023-02-07 09:47:07.754324539 +0100
+@@ -36,3 +36,20 @@
+ #include "com32io.h"
+ #include "hdt-common.h"
+ #include "hdt-ata.h"
++
++struct upload_backend *upload;
++
++/* Defines if the cli is quiet*/
++bool quiet;
++
++/* Defines if the cli is totally silent*/
++bool silent;
++
++/* Defines if we must use the vesa mode */
++bool vesamode;
++
++/* Defines if we must use the menu mode */
++bool menumode;
++
++/* Defines if we are running the auto mode */
++bool automode;
+diff -uprN -X dontdiff syslinuxcurrent/com32/hdt/hdt-cli.c syslinuxpatched/com32/hdt/hdt-cli.c
+--- syslinuxcurrent/com32/hdt/hdt-cli.c	2023-02-07 11:32:40.416063250 +0100
++++ syslinuxpatched/com32/hdt/hdt-cli.c	2023-02-07 11:53:26.104660725 +0100
+@@ -34,6 +34,7 @@
+ #include "hdt-cli.h"
+ #include "hdt-common.h"
+ 
++struct s_cli hdt_cli;
+ struct cli_mode_descr *list_modes[] = {
+     &hdt_mode,
+     &dmi_mode,
+diff -uprN -X dontdiff syslinuxcurrent/com32/hdt/hdt-cli.h syslinuxpatched/com32/hdt/hdt-cli.h
+--- syslinuxcurrent/com32/hdt/hdt-cli.h	2023-02-07 11:32:40.416063250 +0100
++++ syslinuxpatched/com32/hdt/hdt-cli.h	2023-02-07 11:55:04.057076500 +0100
+@@ -98,7 +98,7 @@ struct s_cli {
+     int history_pos;
+     int max_history_pos;
+ };
+-struct s_cli hdt_cli;
++extern struct s_cli hdt_cli;
+ 
+ /* Describe a cli mode */
+ struct cli_mode_descr {
+@@ -136,18 +136,18 @@ struct cli_alias {
+ 
+ /* List of implemented modes */
+ extern struct cli_mode_descr *list_modes[];
+-struct cli_mode_descr hdt_mode;
+-struct cli_mode_descr dmi_mode;
+-struct cli_mode_descr syslinux_mode;
+-struct cli_mode_descr pxe_mode;
+-struct cli_mode_descr kernel_mode;
+-struct cli_mode_descr cpu_mode;
+-struct cli_mode_descr pci_mode;
+-struct cli_mode_descr vesa_mode;
+-struct cli_mode_descr disk_mode;
+-struct cli_mode_descr vpd_mode;
+-struct cli_mode_descr memory_mode;
+-struct cli_mode_descr acpi_mode;
++extern struct cli_mode_descr hdt_mode;
++extern struct cli_mode_descr dmi_mode;
++extern struct cli_mode_descr syslinux_mode;
++extern struct cli_mode_descr pxe_mode;
++extern struct cli_mode_descr kernel_mode;
++extern struct cli_mode_descr cpu_mode;
++extern struct cli_mode_descr pci_mode;
++extern struct cli_mode_descr vesa_mode;
++extern struct cli_mode_descr disk_mode;
++extern struct cli_mode_descr vpd_mode;
++extern struct cli_mode_descr memory_mode;
++extern struct cli_mode_descr acpi_mode;
+ 
+ /* cli helpers */
+ void find_cli_mode_descr(cli_mode_t mode, struct cli_mode_descr **mode_found);
+diff -uprN -X dontdiff syslinuxcurrent/com32/hdt/hdt-common.h syslinuxpatched/com32/hdt/hdt-common.h
+--- syslinuxcurrent/com32/hdt/hdt-common.h	2023-02-07 11:32:40.416063250 +0100
++++ syslinuxpatched/com32/hdt/hdt-common.h	2023-02-07 09:46:45.750235311 +0100
+@@ -79,22 +79,22 @@
+ #define MAX_CLI_LINES 20
+ #define MAX_VESA_CLI_LINES 24
+ 
+-struct upload_backend *upload;
++extern struct upload_backend *upload;
+ 
+ /* Defines if the cli is quiet*/
+-bool quiet;
++extern bool quiet;
+ 
+ /* Defines if the cli is totally silent*/
+-bool silent;
++extern bool silent;
+ 
+ /* Defines if we must use the vesa mode */
+-bool vesamode;
++extern bool vesamode;
+ 
+ /* Defines if we must use the menu mode */
+-bool menumode;
++extern bool menumode;
+ 
+ /* Defines if we are running the auto mode */
+-bool automode;
++extern bool automode;
+ 
+ /* Defines the number of lines in the console
+  * Default is 20 for a std console */
+diff -uprN -X dontdiff syslinuxcurrent/com32/lib/getopt_long.c syslinuxpatched/com32/lib/getopt_long.c
+--- syslinuxcurrent/com32/lib/getopt_long.c	2023-02-07 11:32:40.432063296 +0100
++++ syslinuxpatched/com32/lib/getopt_long.c	2023-02-07 09:07:11.194356761 +0100
+@@ -13,8 +13,8 @@
+ #include <string.h>
+ #include <getopt.h>
+ 
+-char *optarg;
+-int optind, opterr, optopt;
++extern char *optarg;
++extern int optind, opterr, optopt;
+ static struct getopt_private_state {
+ 	const char *optptr;
+ 	const char *last_optstring;
+diff -uprN -X dontdiff syslinuxcurrent/com32/lib/sys/openmem.c syslinuxpatched/com32/lib/sys/openmem.c
+--- syslinuxcurrent/com32/lib/sys/openmem.c	2023-02-07 11:32:40.456063364 +0100
++++ syslinuxpatched/com32/lib/sys/openmem.c	2023-02-07 10:06:35.278925300 +0100
+@@ -38,7 +38,7 @@
+  * Open a chunk of memory as if it was a file
+  */
+ 
+-const struct input_dev __file_dev;
++extern const struct input_dev __file_dev;
+ 
+ int openmem(const void *base, size_t len, int flags)
+ {
+diff -uprN -X dontdiff syslinuxcurrent/core/fs/pxe/ftp.c syslinuxpatched/core/fs/pxe/ftp.c
+--- syslinuxcurrent/core/fs/pxe/ftp.c	2023-02-07 11:32:40.528063568 +0100
++++ syslinuxpatched/core/fs/pxe/ftp.c	2023-02-07 12:01:01.006501231 +0100
+@@ -27,6 +27,11 @@
+ #include "thread.h"
+ #include "url.h"
+ #include "net.h"
++const struct pxe_conn_ops tcp_conn_ops = 
++  {
++    .fill_buffer        = core_tcp_fill_buffer,
++    .close              = core_tcp_close_file,
++  };
+ 
+ static int ftp_cmd_response(struct inode *inode, const char *cmd,
+ 			    const char *cmd_arg,
+diff -uprN -X dontdiff syslinuxcurrent/core/include/core_pxe.h syslinuxpatched/core/include/core_pxe.h
+--- syslinuxcurrent/core/include/core_pxe.h	2023-02-07 11:32:40.536063591 +0100
++++ syslinuxpatched/core/include/core_pxe.h	2023-02-07 10:11:42.727797458 +0100
+@@ -265,7 +265,7 @@ void ftp_open(struct url_info *url, int
+ int ftp_readdir(struct inode *inode, struct dirent *dirent);
+ 
+ /* tcp.c */
+-const struct pxe_conn_ops tcp_conn_ops;
++extern const struct pxe_conn_ops tcp_conn_ops;
+ 
+ extern void gpxe_init(void);
+ extern int pxe_init(bool quiet);
+diff -uprN -X dontdiff syslinuxcurrent/dos/errno.h syslinuxpatched/dos/errno.h
+--- syslinuxcurrent/dos/errno.h	2023-02-07 11:32:40.540063602 +0100
++++ syslinuxpatched/dos/errno.h	2023-02-07 10:57:07.384378897 +0100
+@@ -36,7 +36,7 @@
+ #define	EDOM		33	/* Math argument out of domain of func */
+ #define	ERANGE		34	/* Math result not representable */
+ 
+-int errno;
++extern int errno;
+ void perror(const char *);
+ 
+ #endif /* ERRNO_H */
+diff -uprN -X dontdiff syslinuxcurrent/libinstaller/fs.c syslinuxpatched/libinstaller/fs.c
+--- syslinuxcurrent/libinstaller/fs.c	2023-02-07 11:32:40.552063636 +0100
++++ syslinuxpatched/libinstaller/fs.c	2023-02-07 11:59:22.554121626 +0100
+@@ -30,6 +30,12 @@
+ #include "syslxint.h"
+ #include "syslxcom.h"
+ #include "syslxfs.h"
++size_t strlen(const char *str)
++{
++    const char *s;
++    for (s = str; *s; ++s);
++    return (s - str);
++}
+ 
+ void syslinux_make_bootsect(void *bs, int fs_type)
+ {
+diff -uprN -X dontdiff syslinuxcurrent/libinstaller/setadv.c syslinuxpatched/libinstaller/setadv.c
+--- syslinuxcurrent/libinstaller/setadv.c	2023-02-07 11:32:40.552063636 +0100
++++ syslinuxpatched/libinstaller/setadv.c	2023-02-07 11:56:39.405470501 +0100
+@@ -32,6 +32,7 @@
+ #include "syslxcom.h"
+ #include "syslxfs.h"
+ 
++int errno;
+ unsigned char syslinux_adv[2 * ADV_SIZE];
+ 
+ #define ADV_MAGIC1	0x5a2d2fa5	/* Head signature */
+diff -uprN -X dontdiff syslinuxcurrent/libinstaller/syslinux.h syslinuxpatched/libinstaller/syslinux.h
+--- syslinuxcurrent/libinstaller/syslinux.h	2023-02-07 11:32:40.552063636 +0100
++++ syslinuxpatched/libinstaller/syslinux.h	2023-02-07 11:58:46.757981203 +0100
+@@ -17,6 +17,7 @@
+ #include "advconst.h"
+ #include "setadv.h"
+ 
++extern size_t strlen(const char *str);
+ #ifdef __CHECKER__
+ # define _slimg __attribute__((noderef,address_space(1)))
+ # define _force __attribute__((force))
+diff -uprN -X dontdiff syslinuxcurrent/mbr/i386/mbr.ld syslinuxpatched/mbr/i386/mbr.ld
+--- syslinuxcurrent/mbr/i386/mbr.ld	2023-02-07 11:32:40.560063659 +0100
++++ syslinuxpatched/mbr/i386/mbr.ld	2023-02-07 10:30:20.824367384 +0100
+@@ -70,4 +70,5 @@ SECTIONS
+   .debug_typenames 0 : { *(.debug_typenames) }
+   .debug_varnames  0 : { *(.debug_varnames) }
+   /DISCARD/ : { *(.note.GNU-stack) }
++  /DISCARD/ : { *(.note.gnu.property) }
+ }
+diff -uprN -X dontdiff syslinuxcurrent/mbr/x86_64/mbr.ld syslinuxpatched/mbr/x86_64/mbr.ld
+--- syslinuxcurrent/mbr/x86_64/mbr.ld	2023-02-07 11:32:40.560063659 +0100
++++ syslinuxpatched/mbr/x86_64/mbr.ld	2023-02-07 10:29:35.488132014 +0100
+@@ -69,4 +69,5 @@ SECTIONS
+   .debug_typenames 0 : { *(.debug_typenames) }
+   .debug_varnames  0 : { *(.debug_varnames) }
+   /DISCARD/ : { *(.note.GNU-stack) }
++  /DISCARD/ : { *(.note.gnu.property) }
+ }

@@ -46,3 +46,9 @@ The result: diff -uprN -X dontdiff syslinuxcurrent/ syslinuxpatched/ > syslinux-
 
 [syslinux-gcc12-patches.patch](syslinux-gcc12-patches.patch)
 
+# Applying patch
+
+```
+cd syslinux
+patch -p1 < ../syslinux-gcc12-patches.patch
+```

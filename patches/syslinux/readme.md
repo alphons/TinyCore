@@ -8,8 +8,9 @@ git clone --recursive git://repo.or.cz/syslinux.git syslinuxcurrent
 
 - GCC 12.2.0
 - GNU libc 2.36
-
 - Nasm 2.15.05
+- GNU Make 4.4
+- GNU Binutils 2.39
 - Python 3.9.4
 - XZ Utils 5.4.0
 - Perl v5.36.0 (/usr/bin/perl)

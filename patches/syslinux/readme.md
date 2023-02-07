@@ -44,7 +44,9 @@ git clone --recursive git://repo.or.cz/syslinux.git syslinuxcurrent
 
 The result: diff -uprN -X dontdiff syslinuxcurrent/ syslinuxpatched/ > syslinux-gcc12-patches.patch
 
-[syslinux-gcc12-patches.patch](syslinux-gcc12-patches.patch)
+[syslinux-gcc12-patches.patch](6.04/syslinux-gcc12-patches.patch)
+
+[syslinux-4.07-gcc12-patches.patch](4.07/syslinux-4.07-gcc12-patches.patch)
 
 # Applying patch
 

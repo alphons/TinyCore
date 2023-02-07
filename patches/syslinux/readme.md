@@ -2,7 +2,14 @@
 
 I cloned the syslinux repository and changed a few files to get it compiling again against GCC 12.2
 
+## syslinux 6.04
 git clone --recursive git://repo.or.cz/syslinux.git syslinuxcurrent
+
+## syslinux 4.07
+```
+wget https://mirrors.edge.kernel.org/pub/linux/utils/boot/syslinux/syslinux-4.07.tar.xz
+tar xf syslinux-4.07.tar.xz
+```
 
 # Build environment
 

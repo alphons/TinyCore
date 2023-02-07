@@ -1,0 +1,236 @@
+diff -uprN -X dontdiff syslinux-4.07a/Makefile syslinux-4.07b/Makefile
+--- syslinux-4.07a/Makefile	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/Makefile	2023-02-07 20:03:25.911427894 +0100
+@@ -50,6 +50,8 @@ BOBJECTS = $(BTARGET) \
+ # BSUBDIRs build the on-target binary components.
+ # ISUBDIRs build the installer (host) components.
+ #
++CC = gcc
++CFLAGS = -c -std=c99
+ # Note: libinstaller is both a BSUBDIR and an ISUBDIR.  It contains
+ # files that depend only on the B phase, but may have to be regenerated
+ # for "make installer".
+diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/com32io.h syslinux-4.07b/com32/cmenu/libmenu/com32io.h
+--- syslinux-4.07a/com32/cmenu/libmenu/com32io.h	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/cmenu/libmenu/com32io.h	2023-02-07 19:48:56.718820811 +0100
+@@ -32,6 +32,8 @@
+ // actually 1<<1 is Left Shift, 1<<0 is right shift
+ #define SHIFT_PRESSED (1<<1 | 1 <<0)
+ 
++extern com32sys_t inreg, outreg;	// Global register sets for use
++
+ /* BIOS Assisted output routines */
+ 
+ void getpos(char *row, char *col, char page);
+diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/menu.c syslinux-4.07b/com32/cmenu/libmenu/menu.c
+--- syslinux-4.07a/com32/cmenu/libmenu/menu.c	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/cmenu/libmenu/menu.c	2023-02-07 19:47:46.202448450 +0100
+@@ -15,6 +15,8 @@
+ #include <stdlib.h>
+ #include <console.h>
+ 
++t_handler_return ACTION_VALID, ACTION_INVALID;
++
+ // Local Variables
+ static pt_menusystem ms;    // Pointer to the menusystem
+ char TITLESTR[] =
+diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/menu.h syslinux-4.07b/com32/cmenu/libmenu/menu.h
+--- syslinux-4.07a/com32/cmenu/libmenu/menu.h	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/cmenu/libmenu/menu.h	2023-02-07 19:47:11.990295734 +0100
+@@ -131,7 +131,7 @@ typedef struct {
+     unsigned int reserved:6;	// For future expansion
+ } t_handler_return;
+ 
+-t_handler_return ACTION_VALID, ACTION_INVALID;	// Specific values
++extern t_handler_return ACTION_VALID, ACTION_INVALID;	// Specific values
+ 
+ typedef t_handler_return(*t_item_handler) (struct s_menusystem *,
+ 					   struct s_menuitem *);
+diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/syslnx.c syslinux-4.07b/com32/cmenu/libmenu/syslnx.c
+--- syslinux-4.07a/com32/cmenu/libmenu/syslnx.c	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/cmenu/libmenu/syslnx.c	2023-02-07 19:49:33.619040925 +0100
+@@ -14,7 +14,7 @@
+ #include <com32.h>
+ #include "syslnx.h"
+ 
+-com32sys_t inreg, outreg;	// Global registers for this module
++extern com32sys_t inreg, outreg;	// Global registers for this module
+ 
+ char issyslinux(void)
+ {
+diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/tui.c syslinux-4.07b/com32/cmenu/libmenu/tui.c
+--- syslinux-4.07a/com32/cmenu/libmenu/tui.c	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/cmenu/libmenu/tui.c	2023-02-07 19:50:02.827211225 +0100
+@@ -16,8 +16,6 @@
+ #include <stdlib.h>
+ #include "com32io.h"
+ 
+-com32sys_t inreg, outreg;	// Global register sets for use
+-
+ char bkspstr[] = " \b$";
+ char eolstr[] = "\n$";
+ 
+diff -uprN -X dontdiff syslinux-4.07a/com32/gplinclude/memory.h syslinux-4.07b/com32/gplinclude/memory.h
+--- syslinux-4.07a/com32/gplinclude/memory.h	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/gplinclude/memory.h	2023-02-07 19:50:39.811422118 +0100
+@@ -37,7 +37,7 @@ struct e820entry {
+     uint64_t type;		/* type of memory segment */
+ } __attribute__ ((packed));
+ 
+-const char *const e820_types[5];
++extern const char *const e820_types[5];
+ 
+ void get_type(int, char *, int);
+ void detect_memory_e820(struct e820entry *desc, int size_map, int *size_found);
+diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-cli.c syslinux-4.07b/com32/hdt/hdt-cli.c
+--- syslinux-4.07a/com32/hdt/hdt-cli.c	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/hdt/hdt-cli.c	2023-02-07 19:51:03.379553880 +0100
+@@ -34,6 +34,7 @@
+ #include "hdt-cli.h"
+ #include "hdt-common.h"
+ 
++struct s_cli hdt_cli;
+ struct cli_mode_descr *list_modes[] = {
+     &hdt_mode,
+     &dmi_mode,
+diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-cli.h syslinux-4.07b/com32/hdt/hdt-cli.h
+--- syslinux-4.07a/com32/hdt/hdt-cli.h	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/hdt/hdt-cli.h	2023-02-07 19:40:59.480394836 +0100
+@@ -98,7 +98,7 @@ struct s_cli {
+     int history_pos;
+     int max_history_pos;
+ };
+-struct s_cli hdt_cli;
++extern struct s_cli hdt_cli;
+ 
+ /* Describe a cli mode */
+ struct cli_mode_descr {
+@@ -136,18 +136,18 @@ struct cli_alias {
+ 
+ /* List of implemented modes */
+ extern struct cli_mode_descr *list_modes[];
+-struct cli_mode_descr hdt_mode;
+-struct cli_mode_descr dmi_mode;
+-struct cli_mode_descr syslinux_mode;
+-struct cli_mode_descr pxe_mode;
+-struct cli_mode_descr kernel_mode;
+-struct cli_mode_descr cpu_mode;
+-struct cli_mode_descr pci_mode;
+-struct cli_mode_descr vesa_mode;
+-struct cli_mode_descr disk_mode;
+-struct cli_mode_descr vpd_mode;
+-struct cli_mode_descr memory_mode;
+-struct cli_mode_descr acpi_mode;
++extern struct cli_mode_descr hdt_mode;
++extern struct cli_mode_descr dmi_mode;
++extern struct cli_mode_descr syslinux_mode;
++extern struct cli_mode_descr pxe_mode;
++extern struct cli_mode_descr kernel_mode;
++extern struct cli_mode_descr cpu_mode;
++extern struct cli_mode_descr pci_mode;
++extern struct cli_mode_descr vesa_mode;
++extern struct cli_mode_descr disk_mode;
++extern struct cli_mode_descr vpd_mode;
++extern struct cli_mode_descr memory_mode;
++extern struct cli_mode_descr acpi_mode;
+ 
+ /* cli helpers */
+ void find_cli_mode_descr(cli_mode_t mode, struct cli_mode_descr **mode_found);
+diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-common.c syslinux-4.07b/com32/hdt/hdt-common.c
+--- syslinux-4.07a/com32/hdt/hdt-common.c	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/hdt/hdt-common.c	2023-02-07 19:55:07.944808515 +0100
+@@ -37,6 +37,24 @@
+ #include <disk/mbrs.h>
+ #include <memory.h>
+ 
++struct upload_backend *upload;
++
++/* Defines if the cli is quiet*/
++bool quiet;
++
++/* Defines if the cli is totally silent*/
++bool silent;
++
++/* Defines if we must use the vesa mode */
++bool vesamode;
++
++/* Defines if we must use the menu mode */
++bool menumode;
++
++/* Defines if we are running the auto mode */
++bool automode;
++
++
+ /* ISOlinux requires a 8.3 format */
+ void convert_isolinux_filename(char *filename, struct s_hardware *hardware)
+ {
+diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-common.h syslinux-4.07b/com32/hdt/hdt-common.h
+--- syslinux-4.07a/com32/hdt/hdt-common.h	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/hdt/hdt-common.h	2023-02-07 19:42:09.368788519 +0100
+@@ -82,22 +82,22 @@
+ #define MAX_CLI_LINES 20
+ #define MAX_VESA_CLI_LINES 24
+ 
+-struct upload_backend *upload;
++extern struct upload_backend *upload;
+ 
+ /* Defines if the cli is quiet*/
+-bool quiet;
++extern bool quiet;
+ 
+ /* Defines if the cli is totally silent*/
+-bool silent;
++extern bool silent;
+ 
+ /* Defines if we must use the vesa mode */
+-bool vesamode;
++extern bool vesamode;
+ 
+ /* Defines if we must use the menu mode */
+-bool menumode;
++extern bool menumode;
+ 
+ /* Defines if we are running the auto mode */
+-bool automode;
++extern bool automode;
+ 
+ /* Defines the number of lines in the console
+  * Default is 20 for a std console */
+diff -uprN -X dontdiff syslinux-4.07a/com32/lib/getopt_long.c syslinux-4.07b/com32/lib/getopt_long.c
+--- syslinux-4.07a/com32/lib/getopt_long.c	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/lib/getopt_long.c	2023-02-07 19:43:05.833093033 +0100
+@@ -13,8 +13,8 @@
+ #include <string.h>
+ #include <getopt.h>
+ 
+-char *optarg;
+-int optind, opterr, optopt;
++extern char *optarg;
++extern int optind, opterr, optopt;
+ static struct getopt_private_state {
+ 	const char *optptr;
+ 	const char *last_optstring;
+diff -uprN -X dontdiff syslinux-4.07a/com32/lib/sys/openmem.c syslinux-4.07b/com32/lib/sys/openmem.c
+--- syslinux-4.07a/com32/lib/sys/openmem.c	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/com32/lib/sys/openmem.c	2023-02-07 19:43:42.301283669 +0100
+@@ -38,7 +38,7 @@
+  * Open a chunk of memory as if it was a file
+  */
+ 
+-const struct input_dev __file_dev;
++extern const struct input_dev __file_dev;
+ 
+ int openmem(const void *base, size_t len, int flags)
+ {
+diff -uprN -X dontdiff syslinux-4.07a/mk/build.mk syslinux-4.07b/mk/build.mk
+--- syslinux-4.07a/mk/build.mk	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/mk/build.mk	2023-02-07 20:17:51.707198654 +0100
+@@ -18,7 +18,7 @@ include $(MAKEDIR)/syslinux.mk
+ 
+ OPTFLAGS   = -g -Os
+ INCLUDES   =
+-CFLAGS     = -W -Wall -Wno-sign-compare -D_FILE_OFFSET_BITS=64 \
++CFLAGS     = -W -std=gnu99 -Wall -Wno-sign-compare -D_FILE_OFFSET_BITS=64 \
+              $(OPTFLAGS) $(INCLUDES)
+ LDFLAGS    =
+ LIBS	   =

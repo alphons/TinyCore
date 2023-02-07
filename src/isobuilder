@@ -160,7 +160,8 @@ function MakeISOFS()
       -boot-info-table \
       -b boot/isolinux/isolinux.bin \
       -c boot/isolinux/boot.cat \
-      -quiet -o ../$NEWISO \
+      -input-charset utf-8 \
+      -o ../$NEWISO \
       ./
     cd ..
     sudo chown tc:staff $NEWISO

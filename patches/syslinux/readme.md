@@ -22,7 +22,7 @@ tar xf syslinux-4.07.tar.xz
 - XZ Utils 5.4.0
 - Perl v5.36.0 (/usr/bin/perl)
 
-# Modified files
+# Modified files 6.04
 
 ```
 *       modified:   com32/cmenu/libmenu/cmenu.h

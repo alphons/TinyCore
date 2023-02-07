@@ -16,6 +16,7 @@ git clone --recursive git://repo.or.cz/syslinux.git syslinuxcurrent
 
 # Modified files
 
+```
 *       modified:   com32/cmenu/libmenu/cmenu.h
 *       modified:   com32/cmenu/libmenu/com32io.h
 *       modified:   com32/cmenu/libmenu/menu.c
@@ -36,6 +37,7 @@ git clone --recursive git://repo.or.cz/syslinux.git syslinuxcurrent
 *       modified:   libinstaller/syslinux.h
 *       modified:   mbr/i386/mbr.ld
 *       modified:   mbr/x86_64/mbr.ld
+```
 
 # Patch
 

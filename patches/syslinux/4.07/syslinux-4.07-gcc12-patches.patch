@@ -1,17 +1,49 @@
-diff -uprN -X dontdiff syslinux-4.07a/Makefile syslinux-4.07b/Makefile
---- syslinux-4.07a/Makefile	2013-07-25 11:28:59.000000000 +0200
-+++ syslinux-4.07b/Makefile	2023-02-07 20:03:25.911427894 +0100
-@@ -50,6 +50,8 @@ BOBJECTS = $(BTARGET) \
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/Makefile syslinux-4.07b/Makefile
+--- Syslinux-4.07a/Makefile	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/Makefile	2023-02-08 14:50:58.634320430 +0100
+@@ -42,7 +42,7 @@ BTARGET  = version.gen version.h version
+ BOBJECTS = $(BTARGET) \
+ 	mbr/*.bin \
+ 	core/pxelinux.0 core/isolinux.bin core/isolinux-debug.bin \
+-	gpxe/gpxelinux.0 dos/syslinux.com \
++	dos/syslinux.com \
+ 	win32/syslinux.exe win64/syslinux64.exe \
+ 	dosutil/*.com dosutil/*.sys \
+ 	$(MODULES)
+@@ -50,10 +50,12 @@ BOBJECTS = $(BTARGET) \
  # BSUBDIRs build the on-target binary components.
  # ISUBDIRs build the installer (host) components.
  #
-+CC = gcc
-+CFLAGS = -c -std=c99
++#CC = gcc
++#CFLAGS = -c -std=c99
  # Note: libinstaller is both a BSUBDIR and an ISUBDIR.  It contains
  # files that depend only on the B phase, but may have to be regenerated
  # for "make installer".
-diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/com32io.h syslinux-4.07b/com32/cmenu/libmenu/com32io.h
---- syslinux-4.07a/com32/cmenu/libmenu/com32io.h	2013-07-25 11:28:59.000000000 +0200
+-BSUBDIRS = codepage com32 lzo core memdisk modules mbr memdump gpxe sample \
++BSUBDIRS = codepage com32 lzo core memdisk modules mbr memdump sample \
+ 	   diag libinstaller dos win32 win64 dosutil
+ ITARGET  =
+ IOBJECTS = $(ITARGET) \
+@@ -66,7 +68,7 @@ INSTALL_BIN   =	mtools/syslinux
+ # Things to install in /sbin
+ INSTALL_SBIN  = extlinux/extlinux
+ # Things to install in /usr/lib/syslinux
+-INSTALL_AUX   =	core/pxelinux.0 gpxe/gpxelinux.0 gpxe/gpxelinuxk.0 \
++INSTALL_AUX   =	core/pxelinux.0 \
+ 		core/isolinux.bin core/isolinux-debug.bin \
+ 		dos/syslinux.com \
+ 		mbr/*.bin $(MODULES)
+@@ -81,7 +83,7 @@ INSTALLSUBDIRS = com32 utils dosutil
+ EXTBOOTINSTALL = $(MODULES)
+ 
+ # Things to install in /tftpboot
+-NETINSTALLABLE = core/pxelinux.0 gpxe/gpxelinux.0 \
++NETINSTALLABLE = core/pxelinux.0 \
+ 		 $(MODULES)
+ 
+ all:
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/cmenu/libmenu/com32io.h syslinux-4.07b/com32/cmenu/libmenu/com32io.h
+--- Syslinux-4.07a/com32/cmenu/libmenu/com32io.h	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/cmenu/libmenu/com32io.h	2023-02-07 19:48:56.718820811 +0100
 @@ -32,6 +32,8 @@
  // actually 1<<1 is Left Shift, 1<<0 is right shift
@@ -22,8 +54,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/com32io.h syslinux-4.0
  /* BIOS Assisted output routines */
  
  void getpos(char *row, char *col, char page);
-diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/menu.c syslinux-4.07b/com32/cmenu/libmenu/menu.c
---- syslinux-4.07a/com32/cmenu/libmenu/menu.c	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/cmenu/libmenu/menu.c syslinux-4.07b/com32/cmenu/libmenu/menu.c
+--- Syslinux-4.07a/com32/cmenu/libmenu/menu.c	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/cmenu/libmenu/menu.c	2023-02-07 19:47:46.202448450 +0100
 @@ -15,6 +15,8 @@
  #include <stdlib.h>
@@ -34,8 +66,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/menu.c syslinux-4.07b/
  // Local Variables
  static pt_menusystem ms;    // Pointer to the menusystem
  char TITLESTR[] =
-diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/menu.h syslinux-4.07b/com32/cmenu/libmenu/menu.h
---- syslinux-4.07a/com32/cmenu/libmenu/menu.h	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/cmenu/libmenu/menu.h syslinux-4.07b/com32/cmenu/libmenu/menu.h
+--- Syslinux-4.07a/com32/cmenu/libmenu/menu.h	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/cmenu/libmenu/menu.h	2023-02-07 19:47:11.990295734 +0100
 @@ -131,7 +131,7 @@ typedef struct {
      unsigned int reserved:6;	// For future expansion
@@ -46,8 +78,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/menu.h syslinux-4.07b/
  
  typedef t_handler_return(*t_item_handler) (struct s_menusystem *,
  					   struct s_menuitem *);
-diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/syslnx.c syslinux-4.07b/com32/cmenu/libmenu/syslnx.c
---- syslinux-4.07a/com32/cmenu/libmenu/syslnx.c	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/cmenu/libmenu/syslnx.c syslinux-4.07b/com32/cmenu/libmenu/syslnx.c
+--- Syslinux-4.07a/com32/cmenu/libmenu/syslnx.c	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/cmenu/libmenu/syslnx.c	2023-02-07 19:49:33.619040925 +0100
 @@ -14,7 +14,7 @@
  #include <com32.h>
@@ -58,8 +90,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/syslnx.c syslinux-4.07
  
  char issyslinux(void)
  {
-diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/tui.c syslinux-4.07b/com32/cmenu/libmenu/tui.c
---- syslinux-4.07a/com32/cmenu/libmenu/tui.c	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/cmenu/libmenu/tui.c syslinux-4.07b/com32/cmenu/libmenu/tui.c
+--- Syslinux-4.07a/com32/cmenu/libmenu/tui.c	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/cmenu/libmenu/tui.c	2023-02-07 19:50:02.827211225 +0100
 @@ -16,8 +16,6 @@
  #include <stdlib.h>
@@ -70,8 +102,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/cmenu/libmenu/tui.c syslinux-4.07b/c
  char bkspstr[] = " \b$";
  char eolstr[] = "\n$";
  
-diff -uprN -X dontdiff syslinux-4.07a/com32/gplinclude/memory.h syslinux-4.07b/com32/gplinclude/memory.h
---- syslinux-4.07a/com32/gplinclude/memory.h	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/gplinclude/memory.h syslinux-4.07b/com32/gplinclude/memory.h
+--- Syslinux-4.07a/com32/gplinclude/memory.h	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/gplinclude/memory.h	2023-02-07 19:50:39.811422118 +0100
 @@ -37,7 +37,7 @@ struct e820entry {
      uint64_t type;		/* type of memory segment */
@@ -82,8 +114,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/gplinclude/memory.h syslinux-4.07b/c
  
  void get_type(int, char *, int);
  void detect_memory_e820(struct e820entry *desc, int size_map, int *size_found);
-diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-cli.c syslinux-4.07b/com32/hdt/hdt-cli.c
---- syslinux-4.07a/com32/hdt/hdt-cli.c	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/hdt/hdt-cli.c syslinux-4.07b/com32/hdt/hdt-cli.c
+--- Syslinux-4.07a/com32/hdt/hdt-cli.c	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/hdt/hdt-cli.c	2023-02-07 19:51:03.379553880 +0100
 @@ -34,6 +34,7 @@
  #include "hdt-cli.h"
@@ -93,8 +125,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-cli.c syslinux-4.07b/com32/h
  struct cli_mode_descr *list_modes[] = {
      &hdt_mode,
      &dmi_mode,
-diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-cli.h syslinux-4.07b/com32/hdt/hdt-cli.h
---- syslinux-4.07a/com32/hdt/hdt-cli.h	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/hdt/hdt-cli.h syslinux-4.07b/com32/hdt/hdt-cli.h
+--- Syslinux-4.07a/com32/hdt/hdt-cli.h	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/hdt/hdt-cli.h	2023-02-07 19:40:59.480394836 +0100
 @@ -98,7 +98,7 @@ struct s_cli {
      int history_pos;
@@ -136,8 +168,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-cli.h syslinux-4.07b/com32/h
  
  /* cli helpers */
  void find_cli_mode_descr(cli_mode_t mode, struct cli_mode_descr **mode_found);
-diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-common.c syslinux-4.07b/com32/hdt/hdt-common.c
---- syslinux-4.07a/com32/hdt/hdt-common.c	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/hdt/hdt-common.c syslinux-4.07b/com32/hdt/hdt-common.c
+--- Syslinux-4.07a/com32/hdt/hdt-common.c	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/hdt/hdt-common.c	2023-02-07 19:55:07.944808515 +0100
 @@ -37,6 +37,24 @@
  #include <disk/mbrs.h>
@@ -164,8 +196,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-common.c syslinux-4.07b/com3
  /* ISOlinux requires a 8.3 format */
  void convert_isolinux_filename(char *filename, struct s_hardware *hardware)
  {
-diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-common.h syslinux-4.07b/com32/hdt/hdt-common.h
---- syslinux-4.07a/com32/hdt/hdt-common.h	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/hdt/hdt-common.h syslinux-4.07b/com32/hdt/hdt-common.h
+--- Syslinux-4.07a/com32/hdt/hdt-common.h	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/hdt/hdt-common.h	2023-02-07 19:42:09.368788519 +0100
 @@ -82,22 +82,22 @@
  #define MAX_CLI_LINES 20
@@ -196,8 +228,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/hdt/hdt-common.h syslinux-4.07b/com3
  
  /* Defines the number of lines in the console
   * Default is 20 for a std console */
-diff -uprN -X dontdiff syslinux-4.07a/com32/lib/getopt_long.c syslinux-4.07b/com32/lib/getopt_long.c
---- syslinux-4.07a/com32/lib/getopt_long.c	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/lib/getopt_long.c syslinux-4.07b/com32/lib/getopt_long.c
+--- Syslinux-4.07a/com32/lib/getopt_long.c	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/lib/getopt_long.c	2023-02-07 19:43:05.833093033 +0100
 @@ -13,8 +13,8 @@
  #include <string.h>
@@ -210,8 +242,8 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/lib/getopt_long.c syslinux-4.07b/com
  static struct getopt_private_state {
  	const char *optptr;
  	const char *last_optstring;
-diff -uprN -X dontdiff syslinux-4.07a/com32/lib/sys/openmem.c syslinux-4.07b/com32/lib/sys/openmem.c
---- syslinux-4.07a/com32/lib/sys/openmem.c	2013-07-25 11:28:59.000000000 +0200
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/com32/lib/sys/openmem.c syslinux-4.07b/com32/lib/sys/openmem.c
+--- Syslinux-4.07a/com32/lib/sys/openmem.c	2013-07-25 11:28:59.000000000 +0200
 +++ syslinux-4.07b/com32/lib/sys/openmem.c	2023-02-07 19:43:42.301283669 +0100
 @@ -38,7 +38,7 @@
   * Open a chunk of memory as if it was a file
@@ -222,15 +254,74 @@ diff -uprN -X dontdiff syslinux-4.07a/com32/lib/sys/openmem.c syslinux-4.07b/com
  
  int openmem(const void *base, size_t len, int flags)
  {
-diff -uprN -X dontdiff syslinux-4.07a/mk/build.mk syslinux-4.07b/mk/build.mk
---- syslinux-4.07a/mk/build.mk	2013-07-25 11:28:59.000000000 +0200
-+++ syslinux-4.07b/mk/build.mk	2023-02-07 20:17:51.707198654 +0100
-@@ -18,7 +18,7 @@ include $(MAKEDIR)/syslinux.mk
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/dos/errno.h syslinux-4.07b/dos/errno.h
+--- Syslinux-4.07a/dos/errno.h	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/dos/errno.h	2023-02-08 15:00:21.408259711 +0100
+@@ -36,7 +36,7 @@
+ #define	EDOM		33	/* Math argument out of domain of func */
+ #define	ERANGE		34	/* Math result not representable */
  
- OPTFLAGS   = -g -Os
- INCLUDES   =
--CFLAGS     = -W -Wall -Wno-sign-compare -D_FILE_OFFSET_BITS=64 \
-+CFLAGS     = -W -std=gnu99 -Wall -Wno-sign-compare -D_FILE_OFFSET_BITS=64 \
-              $(OPTFLAGS) $(INCLUDES)
- LDFLAGS    =
- LIBS	   =
+-int errno;
++extern int errno;
+ void perror(const char *);
+ 
+ #endif /* ERRNO_H */
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/extlinux/main.c syslinux-4.07b/extlinux/main.c
+--- Syslinux-4.07a/extlinux/main.c	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/extlinux/main.c	2023-02-08 15:18:43.705875042 +0100
+@@ -38,6 +38,7 @@
+ #include <sys/ioctl.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
++#include <sys/sysmacros.h>
+ #include <sys/mount.h>
+ #include <sys/vfs.h>
+ 
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/libinstaller/fs.c syslinux-4.07b/libinstaller/fs.c
+--- Syslinux-4.07a/libinstaller/fs.c	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/libinstaller/fs.c	2023-02-08 14:57:01.023575019 +0100
+@@ -28,6 +28,12 @@
+ #include "syslxint.h"
+ #include "syslxcom.h"
+ #include "syslxfs.h"
++size_t strlen(const char *str)
++{
++    const char *s;
++    for (s = str; *s; ++s);
++    return (s - str);
++}
+ 
+ void syslinux_make_bootsect(void *bs, int fs_type)
+ {
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/libinstaller/setadv.c syslinux-4.07b/libinstaller/setadv.c
+--- Syslinux-4.07a/libinstaller/setadv.c	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/libinstaller/setadv.c	2023-02-08 15:01:03.976404359 +0100
+@@ -31,6 +31,7 @@
+ #include "syslxint.h"
+ #include "syslxcom.h"
+ #include "syslxfs.h"
++int errno;
+ 
+ unsigned char syslinux_adv[2 * ADV_SIZE];
+ 
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/libinstaller/syslinux.h syslinux-4.07b/libinstaller/syslinux.h
+--- Syslinux-4.07a/libinstaller/syslinux.h	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/libinstaller/syslinux.h	2023-02-08 14:57:35.899694645 +0100
+@@ -17,6 +17,8 @@
+ #include "advconst.h"
+ #include "setadv.h"
+ 
++extern size_t strlen(const char *str);
++
+ /* The standard boot sector and ldlinux image */
+ extern unsigned char syslinux_bootsect[];
+ extern const unsigned int syslinux_bootsect_len;
+diff -uprN '--exclude=lzo' --exclude gpxe -X dontdiff Syslinux-4.07a/mbr/mbr.ld syslinux-4.07b/mbr/mbr.ld
+--- Syslinux-4.07a/mbr/mbr.ld	2013-07-25 11:28:59.000000000 +0200
++++ syslinux-4.07b/mbr/mbr.ld	2023-02-08 12:48:09.404469961 +0100
+@@ -70,4 +70,5 @@ SECTIONS
+   .debug_typenames 0 : { *(.debug_typenames) }
+   .debug_varnames  0 : { *(.debug_varnames) }
+   /DISCARD/ : { *(.note.GNU-stack) }
++  /DISCARD/ : { *(.note.gnu.property) }
+ }

@@ -5,7 +5,7 @@
 # alphons@heijden.com
 #
 #
-ISOBUILDER="2023-02-03 v1.12"
+ISOBUILDER="2023-02-09 v1.13"
 #
 # WORKINGDIR must have write rights for executing user (not root)
 #
@@ -414,33 +414,6 @@ function CheckPrereq()
 
   if [ ! -d $ISODIR ]; then mkdir $ISODIR; fi
 
-  cd $ISODIR
-  if [ ! -d "$INITRD" ]; then
-    echo "No initrd, create new initrd from;"
-    read -p "Download official tinycore $ISOSRC = 0, Mounting boot cdrom  = 1, quit = q [01q]: " yesno
-
-    if [[ $yesno == "q" ]]; then return ; fi
- 
-    if [[ $yesno == "0" ]]; then
-      echo "getting iso from tinycore site"
-      wget -q "$REMOTE$ISOSRC"
-      IsoExtract
-    fi
-  
-    if [[ $yesno == "1" ]]; then
-      echo "mounting cdrom"
-      sudo mount /mnt/sr0
-
-      echo "making iso_contents"
-      sudo mkdir iso_contents
-      sudo rsync -a -H /mnt/sr0/ iso_contents/
-      sudo umount /mnt/sr0
-      MakeInitRd $ISODIR/iso_contents/boot
-    fi
-    
-    echo "done."
-  fi
-
   cd $WORKINGDIR
 
   if [ ! -d "$LINUX" ]; then
@@ -455,6 +428,64 @@ function CheckPrereq()
     tar -xf $LINUX.tar.xz
     echo "removing tar file"
     rm $LINUX.tar.xz  
+  fi
+}
+
+function MakeNewInitRd()
+{
+  cd $ISODIR
+  if [ ! -d "$INITRD" ]; then mkdir -p $INITRD ; fi
+
+  echo "Make new initrd"
+  echo "==============="
+  echo
+  echo "1 - Make initrd from iso"
+  echo "2 - Make initrd form mounting cdrom"
+  echo "3 - Make initrd from corepure64.gz"
+  echo "4 - Make initrd from rootfs64.gz and modules64.gz"
+  echo
+  read -p "your choice [1..4,q] ? " ccc
+  if [[ $ccc == "q" ]]; then return ; fi
+
+  cd $ISODIR
+  
+  if [[ $ccc == "1" ]]; then
+    echo "getting iso from tinycore site"
+    wget -q "$REMOTE$ISOSRC"
+    IsoExtract
+  fi
+
+  if [[ $ccc == "2" ]]; then
+    echo "mounting cdrom"
+    sudo mount /mnt/sr0
+
+    echo "making iso_contents"
+    sudo mkdir iso_contents
+    sudo rsync -a -H /mnt/sr0/ iso_contents/
+    sudo umount /mnt/sr0
+    MakeInitRd $ISODIR/iso_contents/boot  
+  fi
+
+  if [[ $ccc == "3" ]]; then
+    if [ ! -d iso_contents/boot ]; then echo "iso_contents/boot directory does not exist" ; return; fi
+    cd iso_contents/boot
+    if [ -f corepure64.gz ]; then
+      cd $ISODIR
+      MakeInitRd $ISODIR/iso_contents/boot
+    else
+      echo "file not found"
+    fi
+  fi
+
+  if [[ $ccc == "4" ]]; then
+    if [ ! -d iso_contents/boot ]; then echo "iso_contents/boot directory does not exist" ; return; fi
+    cd iso_contents/boot
+    if [ -f rootfs64.gz ] && [ -f modules64.gz ]; then
+      cd $ISODIR
+      MakeInitRd $ISODIR/iso_contents/boot
+    else
+      echo "files not found"
+    fi
   fi
 }
 
@@ -606,6 +637,7 @@ do
   echo "v - Show Variables"
   echo "w - install all packages for the build system"
   echo "s - Make ISO FS (modules64.gz, rootfs64.gz or corepure64.gz) and vmlinuz64"
+  echo "a - Making a new initrd"
   echo "b - Make BusyBox"
   echo
   echo "q - Quit"
@@ -626,6 +658,7 @@ do
     w) LoadPackages ;;
     s) MakeISOFS ;;
     b) MakeBusyBox ;;
+    a) MakeNewInitRd ;;
     q) exit ;;
     *) echo "Say what? $c" ;;
   esac 

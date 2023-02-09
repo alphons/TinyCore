@@ -12,7 +12,7 @@ ISOBUILDER="2023-02-03 v1.12"
 WORKINGDIR="/mnt/sda1"
 RELEASE="release"
 KERNELVERSION="6.1.9"
-ISOSRC="CorePure64-14.a.iso"
+ISOSRC="CorePure64.iso"
 NEWISO="CorePure64-$KERNELVERSION.iso"
 #
 # ---------------------------------------------------------
@@ -42,7 +42,7 @@ SCRIPTDIR=$PWD
 function MakeInitRd()
 {
   CONTENTSBOOT=$1
-  echo "making initrd"
+  echo "making initrd from corepure64 or rootfs64 and modules64"
   sudo mkdir initrd
   cd initrd
   if [[ -f $CONTENTSBOOT/corepure64.gz ]]; then
@@ -151,6 +151,26 @@ function MakeISOFS()
     if [ -f rootfs64.gz ] && [ -f modules64.gz ]; then
       echo "initrd points to rootfs64.gz and modules64.gz"
       sudo sed -i 's/\tinitrd.*/\tinitrd \/boot\/rootfs64.gz,\/boot\/modules64.gz/g' isolinux/isolinux.cfg
+    fi
+
+    if [ -f vmlinuz ]; then
+      echo "Found vmlinuz"
+      sudo sed -i 's/\kernel.*/\kernel \/boot\/vmlinuz/g' isolinux/isolinux.cfg
+    fi
+
+    if [ -f vmlinuz64 ]; then
+      echo "Found vmlinuz64"
+      sudo sed -i 's/\kernel.*/\kernel \/boot\/vmlinuz64/g' isolinux/isolinux.cfg
+    fi
+    
+    if [ ! -f vmlinuz ] && [ ! -f vmlinuz64 ]; then
+      echo "There is no kernel found exitting"
+      return
+    fi    
+
+    if [ ! -f corepure64.gz ] && [ ! -f rootfs64.gz ]; then
+      echo "Minimum needed corepure64.gz or rootfs64.gz exitting"
+      return
     fi
     cd ..
     sudo mkisofs -r -R -l -J \

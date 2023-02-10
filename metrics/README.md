@@ -2,7 +2,7 @@
 
 Here are some details on booting TinyCore on my test system.
 
-This [Config-6.1.2-TinyCore64-vmware](/alphons/TinyCore/blob/main/src/Config-6.1.2-TinyCore64-vmware) file is used for compilinng kernel and modules.
+This [Config-6.1.2-TinyCore64-vmware](https://github.com/alphons/TinyCore/blob/main/src/Config-6.1.2-TinyCore64-vmware) file is used for compilinng kernel and modules.
 
 Kernel is downloaded directly from [www.kernel.org](https://kernel.org) and compiled stripping all not used features because it runs on VMWare / esxi. 
 

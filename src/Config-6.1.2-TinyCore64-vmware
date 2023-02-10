@@ -1649,7 +1649,7 @@ CONFIG_HPET_MMAP_DEFAULT=y
 # CONFIG_TCG_TPM is not set
 # CONFIG_TELCLOCK is not set
 # CONFIG_XILLYBUS is not set
-# CONFIG_RANDOM_TRUST_CPU is not set
+CONFIG_RANDOM_TRUST_CPU=y
 # CONFIG_RANDOM_TRUST_BOOTLOADER is not set
 # end of Character devices
 

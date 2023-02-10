@@ -6,7 +6,7 @@ This [Config-6.1.2-TinyCore64-vmware](/alphons/TinyCore/blob/main/src/Config-6.1
 
 Kernel is downloaded directly from [www.kernel.org](https://kernel.org) and compiled stripping all not used features because it runs on VMWare / esxi. 
 
-Building / Toolchain of the alpha release of [TinyCore 14}(http://repo.tinycorelinux.net/14.x/x86_64/release_candidates/distribution_files/) is used.
+Building / Toolchain of the alpha release of [TinyCore 14](http://repo.tinycorelinux.net/14.x/x86_64/release_candidates/distribution_files/) is used.
 
 Kernel is booted without any bootloader, it makes use of the (bootsector-linux-loader)[/alphons/bootsector-linux-loader] which presents the bootable disk as a .vmdk file which kan be used directly in VMWare
 

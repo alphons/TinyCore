@@ -10,7 +10,7 @@ Building / Toolchain of the alpha release of [TinyCore 14](http://repo.tinycorel
 
 Kernel is booted without any bootloader, it makes use of the [bootsector-linux-loader](/alphons/bootsector-linux-loader) which presents the bootable disk as a .vmdk file which kan be used directly in VMWare
 
-There are nog TinyCore extensions loaded albeit the netwerk and TinyCore infrastructure works out of the box.
+There are no TinyCore extensions loaded albeit the netwerk and TinyCore infrastructure works out of the box.
 
 For practical use a data disk has to be attached and some swap space on disk will be needed.
 

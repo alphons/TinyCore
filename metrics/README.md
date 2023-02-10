@@ -79,7 +79,7 @@ lo        Link encap:Local Loopback
 
 # lsmod
 
-The kernel config uses as much modules as possible. Just a few are needed to be in the kernel.
+The kernel config uses as much external modules as possible. Just a few are needed to be in the kernel.
 
 ```
 Module                  Size  Used by    Not tainted

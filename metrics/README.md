@@ -79,6 +79,8 @@ lo        Link encap:Local Loopback
 
 # lsmod
 
+The kernel config uses as much modules as possible. Just a few are needed to be in the kernel.
+
 ```
 Module                  Size  Used by    Not tainted
 af_packet              36864  0 
@@ -112,5 +114,62 @@ libata                122880  3 ata_generic,ata_piix,pata_acpi
 loop                   20480 64 
 ac                     12288  0 
 unix                   32768 54 
+
+```
+
+# modprobe -l
+
+All available modules in this build.
+
+```
+kernel/drivers/input/keyboard/atkbd.ko.gz
+kernel/drivers/cpufreq/cpufreq_conservative.ko.gz
+kernel/net/key/af_key.ko.gz
+kernel/drivers/scsi/sd_mod.ko.gz
+kernel/net/vmw_vsock/vmw_vsock_vmci_transport.ko.gz
+kernel/fs/nls/nls_cp437.ko.gz
+kernel/net/packet/af_packet.ko.gz
+kernel/drivers/misc/vmw_balloon.ko.gz
+kernel/drivers/input/serio/serio.ko.gz
+kernel/drivers/scsi/sr_mod.ko.gz
+kernel/drivers/input/mousedev.ko.gz
+kernel/drivers/misc/vmw_vmci/vmw_vmci.ko.gz
+kernel/drivers/ata/ata_generic.ko.gz
+kernel/drivers/input/serio/i8042.ko.gz
+kernel/fs/nls/nls_iso8859-15.ko.gz
+kernel/drivers/scsi/sg.ko.gz
+kernel/net/unix/unix.ko.gz
+kernel/drivers/tty/serdev/serdev.ko.gz
+kernel/fs/squashfs/squashfs.ko.gz
+kernel/lib/lz4/lz4_decompress.ko.gz
+kernel/drivers/cpufreq/cpufreq_powersave.ko.gz
+kernel/fs/nls/nls_ascii.ko.gz
+kernel/fs/nls/nls_cp850.ko.gz
+kernel/net/xfrm/xfrm_algo.ko.gz
+kernel/drivers/cpufreq/cpufreq_userspace.ko.gz
+kernel/fs/nls/nls_iso8859-1.ko.gz
+kernel/net/vmw_vsock/vsock.ko.gz
+kernel/drivers/scsi/scsi_transport_spi.ko.gz
+kernel/drivers/input/serio/libps2.ko.gz
+kernel/drivers/input/vivaldi-fmap.ko.gz
+kernel/fs/nls/nls_utf8.ko.gz
+kernel/drivers/net/vmxnet3/vmxnet3.ko.gz
+kernel/drivers/cdrom/cdrom.ko.gz
+kernel/fs/efivarfs/efivarfs.ko.gz
+kernel/drivers/scsi/scsi_transport_iscsi.ko.gz
+kernel/drivers/input/evdev.ko.gz
+kernel/drivers/scsi/scsi_transport_sas.ko.gz
+kernel/drivers/input/misc/pcspkr.ko.gz
+kernel/drivers/input/mouse/psmouse.ko.gz
+kernel/lib/zstd/zstd_common.ko.gz
+kernel/drivers/ata/ata_piix.ko.gz
+kernel/drivers/rtc/rtc-cmos.ko.gz
+kernel/drivers/ata/pata_acpi.ko.gz
+kernel/block/t10-pi.ko.gz
+kernel/lib/zstd/zstd_decompress.ko.gz
+kernel/drivers/block/loop.ko.gz
+kernel/drivers/acpi/ac.ko.gz
+kernel/drivers/ata/libata.ko.gz
+kernel/drivers/cpufreq/cpufreq_ondemand.ko.gz
 
 ```

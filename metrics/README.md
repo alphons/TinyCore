@@ -2,7 +2,15 @@
 
 Here are some details on booting TinyCore on my test system.
 
-There are nog extensions loaded.
+This [Config-6.1.2-TinyCore64-vmware](/alphons/TinyCore/blob/main/src/Config-6.1.2-TinyCore64-vmware) file is used for compilinng kernel and modules.
+
+Kernel is compiled stripping all not used features because it runs on VMWare / esxi. 
+
+Kernel is booted without any bootloader, it makes use of the (bootsector-linux-loader)[/alphons/bootsector-linux-loader] which presents the bootable disk as a .vmdk file which kan be used directly in VMWare
+
+There are nog TinyCore extensions loaded albeit the netwerk and TinyCore infrastructure works out of the box.
+
+For practical use a data disk has to be attached and some swap space on disk will be needed.
 
 ## dmesg
 
@@ -13,7 +21,7 @@ Showing here some head and tails.
 [dmesg.txt](dmesg.txt)
 ```
 [    0.000000] Linux version 6.1.2-tinycore64 (tc@box) (gcc (GCC) 12.2.0, GNU ld (GNU Binutils) 2.39) #4 SMP Fri Feb 10 08:07:52 UTC 2023
-[    0.000000] Command line: loglevel=3
+[    0.000000] **Command line: loglevel=3**
 [    0.000000] Disabled fast string operations
 ....
 ....

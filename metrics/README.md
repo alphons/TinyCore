@@ -8,7 +8,7 @@ Kernel is downloaded directly from [www.kernel.org](https://kernel.org) and comp
 
 Building / Toolchain of the alpha release of [TinyCore 14](http://repo.tinycorelinux.net/14.x/x86_64/release_candidates/distribution_files/) is used.
 
-Kernel is booted without any bootloader, it makes use of the (bootsector-linux-loader)[/alphons/bootsector-linux-loader] which presents the bootable disk as a .vmdk file which kan be used directly in VMWare
+Kernel is booted without any bootloader, it makes use of the [bootsector-linux-loader](/alphons/bootsector-linux-loader) which presents the bootable disk as a .vmdk file which kan be used directly in VMWare
 
 There are nog TinyCore extensions loaded albeit the netwerk and TinyCore infrastructure works out of the box.
 

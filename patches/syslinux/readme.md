@@ -2,6 +2,8 @@
 
 I cloned the syslinux repository and changed a few files to get it compiling again against GCC 12.2
 
+Although compiling does work, the binaries (isolinux.bin) **do not work** 
+
 ## syslinux 6.04
 git clone --recursive git://repo.or.cz/syslinux.git syslinuxcurrent
 

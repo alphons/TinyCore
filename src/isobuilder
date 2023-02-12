@@ -5,7 +5,7 @@
 # alphons@heijden.com
 #
 #
-ISOBUILDER="2023-02-09 v1.13"
+ISOBUILDER="ISO-Builder 2023-02-09 v2.0"
 #
 # WORKINGDIR must have write rights for executing user (not root)
 #
@@ -624,7 +624,7 @@ if [[ $0 != "./isobuilder" ]]; then return ; fi
 while :
 do
   echo
-  echo "ISO-Builder $ISOBUILDER"
+  echo "$ISOBUILDER"
   echo "============================="
   echo "c - make mrproper"
   echo "0 - make allnoconfig (!!! better use your own .config file !!!)"

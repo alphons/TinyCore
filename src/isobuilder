@@ -9,7 +9,7 @@ ISOBUILDER="2023-02-09 v1.13"
 #
 # WORKINGDIR must have write rights for executing user (not root)
 #
-WORKINGDIR="/mnt/sda1"
+WORKINGDIR="/mnt/sdb1"
 RELEASE="release"
 KERNELVERSION="6.1.2"
 ISOSRC="CorePure64.iso"
@@ -618,6 +618,8 @@ function MakeBusyBox()
 CheckPrereq
 
 cd $WORKINGDIR
+
+if [[ $0 != "./isobuilder" ]]; then return ; fi
 
 while :
 do

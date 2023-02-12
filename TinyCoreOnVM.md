@@ -30,7 +30,7 @@ Edit de .vmx file to change scsi0 and ehternet0 to vmware stuff
 ```
 scsi0.virtualDev = "pvscsi"
 ethernet0.virtualDev = "vmxnet3"
-bios.bootdelay = 5000
+bios.bootdelay = 5000 (only when want to make changes to the default bios)
 ```  
   - Play Virtual Machine
  

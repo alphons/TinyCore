@@ -777,21 +777,21 @@ do
     if [[ $exit_status != 0 ]]; then echo "$exit_status" ; clear ; exit 0 ; fi
 
     case  $selection  in
-      c) MrProper  2>&1 | dialog --programbox  30 100 ;;
-      0) MakeNoConfig  2>&1 | dialog --programbox  30 100 ;;
+      c) MrProper  2>&1 | dialog --backtitle "$ISOBUILDER"  --programbox  30 100 ;;
+      0) MakeNoConfig  2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
       C) SelectPreConfigMenu ;;
       r) Reconfigure ;;
-      k) MakeKernel  2>&1 | dialog --programbox  30 100 ;;
-      m) MakeModules  2>&1 | dialog --programbox  30 100 ;;
-      i) Install  2>&1 | dialog --programbox  30 100 ;;
-      n) MakeNewIso 2>&1 | dialog --programbox  30 100 ;;
-      p) PurgeExtraction  2>&1 | dialog --programbox  30 100 ;;
-      x) IsoExtract  2>&1 | dialog --programbox  30 100 ;;
+      k) MakeKernel  2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
+      m) MakeModules  2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
+      i) Install  2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
+      n) MakeNewIso 2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
+      p) PurgeExtraction  2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
+      x) IsoExtract  2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
       v) ShowVarsMenu ;;
-      w) LoadPackages  2>&1 | dialog --programbox  30 100 ;;
-      s) MakeISOFS  2>&1 | dialog --programbox  30 100 ;;
-      b) MakeBusyBox  2>&1 | dialog --programbox  30 100 ;;
-      a) MakeNewInitRd  2>&1 | dialog --programbox  30 100 ;;
+      w) LoadPackages  2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
+      s) MakeISOFS  2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
+      b) MakeBusyBox  2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
+      a) MakeNewInitRd  2>&1 | dialog  --backtitle "$ISOBUILDER" --programbox  30 100 ;;
       q) clear ; exit ;;
     esac 
   fi

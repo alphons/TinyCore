@@ -1,5 +1,5 @@
 WORKINGDIR="/mnt/sdb1"
 RELEASE="release"
 ISOSRC="CorePure64.iso"
-NEWISO="CorePure64-6.1.2.iso"
+NEWISO="new-CorePure.iso"
 LINUX="linux-6.1.2"

@@ -371,26 +371,53 @@ function SelectPreConfig()
   echo
   echo "Creating .config file for $LINUX"
   cd $SCRIPTDIR
-  files=`ls -a Config*`
-  i=1
-  for file in $files; do
-    echo "$i - $file"
-    i="$(($i + 1))"
+  files=(Config*)
+  for (( i=0; i<${#files[@]}; i++ ))
+  do 
+     echo "$i - ${files[$i]}"
   done
   echo
   read -p "Select Config file to install q=quit ? " ccc
   if [ $ccc == "q" ]; then return ; fi
-
-  i=1
-  for file in $files; do
-    if [[ $i == $ccc ]]; then
-      echo
-      echo "Copy $file to $LINUXPATH/.config"
-      cp -f $file $LINUXPATH/.config
-    fi
-    i="$(($i + 1))"
-  done
+  file=${files[$ccc]}
+  echo
+  echo "Copy $file to $LINUXPATH/.config"
+  cp -f $file $LINUXPATH/.config
 }
+
+function SelectPreConfigMenu()
+{
+  echo
+  echo "Creating .config file for $LINUX"
+  cd $SCRIPTDIR
+  files=(Config*)
+  option=()
+  for (( i=0; i<${#files[@]}; i++ ))
+  do 
+     option+=("$i")
+     option+=("${files[$i]}")
+  done
+
+  exec 3>&1
+  selection=$(dialog \
+    --backtitle "$ISOBUILDER" \
+    --title "Config selection" \
+    --clear \
+    --cancel-label "Exit" \
+    --menu "Please select:" 0 0 0 "${option[@]}" 2>&1 1>&3)
+  exit_status=$?
+  exec 3>&-
+
+  if [[ $exit_status != 0 ]]; then return ; fi
+
+  file=${files[$selection]}
+
+  (
+    echo "Copy $file to $LINUXPATH/.config"
+    cp -f $file $LINUXPATH/.config
+  ) | dialog --programbox 10 100
+}
+
 
 function CheckPrereq()
 {
@@ -491,12 +518,10 @@ function MakeNewInitRd()
 
 function MenuDialog()
 {
-  BACKTITLE="$1"
-  TITLE="$2"
   exec 3>&1
   selection=$(dialog \
-    --backtitle "$BACKTITLE" \
-    --title "$TITLE" \
+    --backtitle "$ISOBUILDER" \
+    --title "main menu" \
     --clear \
     --cancel-label "Exit" \
     --menu "Please select:" 0 0 0 "${menu[@]}" 2>&1 1>&3)
@@ -506,10 +531,8 @@ function MenuDialog()
 
 function MenuText()
 {
-  BACKTITLE="$1"
-  TITLE="$2"
   echo
-  echo "$BACKTITLE"
+  echo "$ISOBUILDER"
   echo "============================="
 
   len=${#menu[@]}
@@ -522,7 +545,7 @@ function MenuText()
   echo
   echo "q - Quit"
   echo
-  read -p "c,0,r,k,m,i,n,p,x,v,w,s or q(uit) :" c
+  read -p "c,0,r,k,m,i,n,p,x,v,w,s or q(uit) :" selection
 }
 
 
@@ -656,7 +679,7 @@ CheckPrereq
 
 cd $WORKINGDIR
 
-menu=("c" "make mrproper" \
+menua=("c" "make mrproper" \
 "0" "make allnoconfig (!!! better use your own .config file !!!)" \
 "C" "List and select predefined config files" \
 "r" "Re-configure using make menuconfig" \
@@ -675,30 +698,51 @@ menu=("c" "make mrproper" \
 while :
 do
   if [[ $0 == "./isobuilder" ]]; then
-    MenuText "$ISOBUILDER" "main menu"
+    menu=("${menua[@]}")
+    MenuText
+    case  $selection  in
+      c) MrProper ;;
+      0) MakeNoConfig ;;
+      C) SelectPreConfig ;;
+      r) Reconfigure ;;
+      k) MakeKernel ;;
+      m) MakeModules ;;
+      i) Install ;;
+      n) MakeNewIso ;;
+      p) PurgeExtraction ;;
+      x) IsoExtract ;;
+      v) ShowVars ;;
+      w) LoadPackages ;;
+      s) MakeISOFS ;;
+      b) MakeBusyBox ;;
+      a) MakeNewInitRd ;;
+
+      q) exit ;;
+      *) echo "Say what? $c" ;;
+    esac 
+
   else
-    MenuDialog "$ISOBUILDER" "main menu"
+    menu=("${menua[@]}")
+    MenuDialog
   
     if [[ $exit_status != 0 ]]; then echo "$exit_status" ; clear ; exit 0 ; fi
-  fi
 
-  case  $c  in
-    c) MrProper ;;
-    0) MakeNoConfig ;;
-    C) SelectPreConfig ;;
-    r) Reconfigure ;;
-    k) MakeKernel ;;
-    m) MakeModules ;;
-    i) Install ;;
-    n) MakeNewIso ;;
-    p) PurgeExtraction ;;
-    x) IsoExtract ;;
-    v) ShowVars ;;
-    w) LoadPackages ;;
-    s) MakeISOFS ;;
-    b) MakeBusyBox ;;
-    a) MakeNewInitRd ;;
-    q) exit ;;
-    *) echo "Say what? $c" ;;
-  esac 
+    case  $selection  in
+      c) MrProper  2>&1 | dialog --programbox  30 100 ;;
+      0) MakeNoConfig  2>&1 | dialog --programbox  30 100 ;;
+      C) SelectPreConfigMenu ;;
+      r) Reconfigure ;;
+      k) MakeKernel  2>&1 | dialog --programbox  30 100 ;;
+      m) MakeModules  2>&1 | dialog --programbox  30 100 ;;
+      i) Install  2>&1 | dialog --programbox  30 100 ;;
+      n) MakeNewIso 2>&1 | dialog --programbox  30 100 ;;
+      p) PurgeExtraction  2>&1 | dialog --programbox  30 100 ;;
+      x) IsoExtract  2>&1 | dialog --programbox  30 100 ;;
+      v) ShowVars  2>&1 | dialog --programbox  30 100 ;;
+      w) LoadPackages  2>&1 | dialog --programbox  30 100 ;;
+      s) MakeISOFS  2>&1 | dialog --programbox  30 100 ;;
+      b) MakeBusyBox  2>&1 | dialog --programbox  30 100 ;;
+      a) MakeNewInitRd  2>&1 | dialog --programbox  30 100 ;;
+    esac 
+  fi
 done

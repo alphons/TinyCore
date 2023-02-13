@@ -9,18 +9,35 @@ ISOBUILDER="ISO-Builder 2023-02-09 v2.0"
 #
 # WORKINGDIR must have write rights for executing user (not root)
 #
+MYSELF=$(echo $0 | sed 's/.*\///')
+SCRIPT=$(realpath "$0")
+SCRIPTPATH=$(dirname "$SCRIPT")
+
+if [[ $MYSELF == "isobuilder" ]]; then
+  MENU=false
+else
+  MENU=true
+fi
+
+if [[ ! -f builder.inc ]]; then
+  cat << EOF > builder.inc
 WORKINGDIR="/mnt/sda1"
 RELEASE="release"
-KERNELVERSION="6.1.2"
 ISOSRC="CorePure64.iso"
-NEWISO="CorePure64-$KERNELVERSION.iso"
+NEWISO="new-CorePure64-iso"
+LINUX="linux-6.1.2"
+EOF
+fi
+
+source builder.inc
+
 #
 # ---------------------------------------------------------
 #
 REMOTE="http://www.tinycorelinux.net/13.x/x86_64/release/"
 ISODIR="$WORKINGDIR/$RELEASE"
 #
-LINUX="linux-$KERNELVERSION"
+KERNELVERSION=$(echo $LINUX | sed 's/.*\-//')
 LINSRC="https://cdn.kernel.org/pub/linux/kernel/v6.x/$LINUX.tar.xz"
 LINUXPATH="$WORKINGDIR/$LINUX"
 #
@@ -243,6 +260,38 @@ function ShowVars()
   echo
 }
 
+function ShowVarsMenu()
+{
+  exec 3>&1
+  result=$(dialog --backtitle "ISOBuilder" \
+    --form "Settings - use [up] [down] to select input field " 18 70 11 \
+     "Working-Dir:" 2 2 "$WORKINGDIR" 2 15 40 0 \
+     "Release:" 4 2 "$RELEASE" 4 15 40 0 \
+     "Iso-Src:" 6 2 "$ISOSRC" 6 15 40 0 \
+     "New-Iso:" 8 2 "$NEWISO" 8 15 40 0 \
+     "Linux:" 10 2 "$LINUX" 10 15 40 0 2>&1 1>&3)
+  exit_status=$?
+  exec 3>&-
+
+  if [[ $exit_status == 0 ]]; then
+    array=($result)
+    WORKINGDIR=${array[0]}
+    RELEASE=${array[1]}
+    ISOSRC=${array[2]}
+    NEWISO=${array[3]}
+    LINUX=${array[4]}
+    
+    cat <<EOF > $SCRIPTPATH/builder.inc
+WORKINGDIR="${WORKINGDIR}"
+RELEASE="${RELEASE}"
+ISOSRC="$ISOSRC"
+NEWISO="$NEWISO"
+LINUX="$LINUX"
+EOF
+    return    
+  fi
+}
+
 function MrProper()
 {
   echo
@@ -428,20 +477,20 @@ function CheckPrereq()
   tce-load -wi coreutils compiletc gcc binutils make squashfs-tools ncursesw-dev bison >/dev/null
   tce-load -wi flex-dev openssl-1.1.1-dev elfutils-dev gettext-dev bc perl5 python3.9 texinfo >/dev/null
 
-  ShowVars
-
   if [ "$(id -u)" -eq 0 ]; then echo "Please run as user (not root)."; exit 1; fi
+  
+  return
 
-  if [ ! -d $WORKINGDIR ]; then echo "Directory $WORKINGDIR does not exist"; exit 1; fi
+#  if [ ! -d $WORKINGDIR ]; then echo "Directory $WORKINGDIR does not exist"; exit 1; fi
 
-  if [ ! -w $WORKINGDIR ]; then 
-    sudo chown root:staff $WORKINGDIR
-    sudo chmod 775 $WORKINGDIR
-  fi
+#  if [ ! -w $WORKINGDIR ]; then 
+#    sudo chown root:staff $WORKINGDIR
+#    sudo chmod 775 $WORKINGDIR
+#  fi
 
-  if [ ! -d $ISODIR ]; then mkdir $ISODIR; fi
+#  if [ ! -d $ISODIR ]; then mkdir $ISODIR; fi
 
-  cd $WORKINGDIR
+#  cd $WORKINGDIR
 
   if [ ! -d "$LINUX" ]; then
     echo "LINUX directory for kernel $LINUX not found"
@@ -677,7 +726,9 @@ CheckPrereq
 
 cd $WORKINGDIR
 
-menua=("c" "make mrproper" \
+menua=(
+"v" "Variable settings" \
+"c" "make mrproper" \
 "0" "make allnoconfig (!!! better use your own .config file !!!)" \
 "C" "List and select predefined config files" \
 "r" "Re-configure using make menuconfig" \
@@ -687,7 +738,6 @@ menua=("c" "make mrproper" \
 "n" "Make new ISO" \
 "p" "Purge extraction" \
 "x" "ISO extract" \
-"v" "Show Variables" \
 "w" "install all packages for the build system" \
 "s" "Make ISO FS (modules64.gz, rootfs64.gz or corepure64.gz) and vmlinuz64" \
 "a" "Making a new initrd" \
@@ -696,7 +746,7 @@ menua=("c" "make mrproper" \
 
 while :
 do
-  if [[ $0 == "./isobuilder" ]]; then
+  if [[ $MENU != true ]]; then
     menu=("${menua[@]}")
     MenuText
     case  $selection  in
@@ -737,7 +787,7 @@ do
       n) MakeNewIso 2>&1 | dialog --programbox  30 100 ;;
       p) PurgeExtraction  2>&1 | dialog --programbox  30 100 ;;
       x) IsoExtract  2>&1 | dialog --programbox  30 100 ;;
-      v) ShowVars  2>&1 | dialog --programbox  30 100 ;;
+      v) ShowVarsMenu ;;
       w) LoadPackages  2>&1 | dialog --programbox  30 100 ;;
       s) MakeISOFS  2>&1 | dialog --programbox  30 100 ;;
       b) MakeBusyBox  2>&1 | dialog --programbox  30 100 ;;

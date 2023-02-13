@@ -8,9 +8,9 @@ Download (latest) VMWare player from www.vmware.com
 
 https://www.vmware.com/products/workstation-player/workstation-player-evaluation.html
 
-My download link on 2023-01-06 was:
+My download link on 2023-02-13 was:
 
-https://download3.vmware.com/software/WKST-PLAYER-1700/VMware-player-full-17.0.0-20800274.exe
+https://download3.vmware.com/software/WKST-PLAYER-1701/VMware-player-full-17.0.1-21139696.exe
 
 - Install VMWare player
 - Start VMWare player

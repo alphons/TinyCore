@@ -1,4 +1,7 @@
-# TinyCore
+# TinyCore (deprecated)
+
+This will be soon released as VMTux
+
 My personal and public information for the TinyCore OS
 
 [TinyCore on VM](TinyCoreOnVM.md)

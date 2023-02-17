@@ -15,7 +15,7 @@ https://download3.vmware.com/software/WKST-PLAYER-1701/VMware-player-full-17.0.1
 When Hyper-V is installed, make sure it is uninstalled.
 Open Powershell prompt in admin mode:
 ```
-Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Hypervisor
+PS> Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Hypervisor
 ```
 
 - Install VMWare player

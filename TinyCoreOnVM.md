@@ -26,6 +26,7 @@ Make sure these features are all uninstalled:
 - WSL2
 - Hyper-V
 
+### Installing and making an VM
 
 - Install VMWare player
 - Start VMWare player

@@ -18,6 +18,15 @@ Open Powershell prompt in admin mode:
 PS> Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Hypervisor
 ```
 
+Make sure these features are all uninstalled:
+
+- Credential Guard/Device Guard
+- Windows Sandbox
+- Virtual machine platform
+- WSL2
+- Hyper-V
+
+
 - Install VMWare player
 - Start VMWare player
 - Create New Virtual Machine
